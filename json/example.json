@@ -1,0 +1,20 @@
+[
+    {
+        "name": "tom",
+        "yomigana": "とむ",
+        "color": "blue",
+        "score": "1000"
+    },
+    {
+        "name": "john",
+        "yomigana": "じょん",
+        "color": "red",
+        "score": "1400"
+    },
+    {
+        "name": "bob",
+        "yomigana": "ぼぶ",
+        "color": "green",
+        "score": "700"
+    }
+]
