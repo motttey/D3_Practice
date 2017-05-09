@@ -7,7 +7,7 @@ for (var i = 0; i < numDataPoints; i++) {
    var newNumber2 = Math.round(Math.random() * yRange);
    dataset.push([newNumber1, newNumber2]);
 }
-var w = 1000;
+var w = 800;
 var h = 500;
 
 // SVG 要素の生成
@@ -18,7 +18,7 @@ var svg = d3.select("body")
 
 // 入力ドメイン: 入力データの値の取りうる範囲
 // 出力値の取りうる範囲
-var padding = 100;
+var padding = 50;
 
 var xScale = d3.scaleLinear()
     .domain([0, d3.max(dataset, function(d) { return d[0]; })]) //データセットの最大値を出力ドメインとする
@@ -28,7 +28,7 @@ var yScale = d3.scaleLinear()
     .range([padding, h - padding ]);
 var rScale = d3.scaleLinear()
     .domain([0, Math.sqrt( d3.max(dataset, function(d) { return d[1]; }))])
-    .range([10, 50]);
+    .range([1, 25]);
 
 svg.selectAll("circle")
    .data(dataset)
@@ -45,7 +45,7 @@ svg.selectAll("circle")
        return "rgb(0, " + Math.round(d[0] / 2)  + ", " +  Math.round( d[1] / 2 ) + ")";
    })
    .attr("r", function(d) {
-       return rScale(Math.sqrt(d[0]) / 5);
+       return rScale(Math.sqrt(d[0]));
    });
 
 svg.selectAll("text")
@@ -73,9 +73,11 @@ svg.selectAll("text")
 //g: group
   // Add the y Axis
   svg.append("g")
-      .call(d3.axisBottom(xScale));
+      .call(d3.axisBottom(xScale))
+      .attr("transform", "translate(0, " + padding * 9 + ")");
   svg.append("g")
-      .call(d3.axisRight(yScale));
+      .call(d3.axisRight(yScale))
+      .attr("transform", "translate(" + padding + ",0)");
  // text label for the y axis
   svg.append("text")
       .attr("y", 0 - 10)
