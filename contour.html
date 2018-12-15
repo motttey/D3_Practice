@@ -4,10 +4,10 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="js/contour.js"></script>
     <meta charset="utf-8"/>
-    <title>D3 Contour</title>
+    <title>D3 Density Convex Hull</title>
   </head>
   <body>
-    <h1>D3 Contour</h1>
+    <h1>D3 Density Convex Hull</h1>
     <div id="contour_div">
       <svg id="contour"></svg>
     </div>
@@ -15,11 +15,11 @@
   </body>
   <script>
 
-    const width = 600;
-    const height = 400;
+    const width = 800;
+    const height = 600;
 
     // sample size
-    const n = 500;
+    const n = 600;
     var values = new Array(n);
     for(var i = 0; i < n; i++) {
       values[i] = {

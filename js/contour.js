@@ -3,7 +3,7 @@ function drawContour(values){
     .x(function(d) { return xScale(d["x"]); })
     .y(function(d) { return yScale(d["y"]); })
     .size([width, height])
-    .cellSize(35)
+    .cellSize(50)
     .bandwidth(15)
 
   var contourDensityValues = contourDensity(values);
@@ -12,7 +12,6 @@ function drawContour(values){
     .domain([d3.max(contourDensityValues, function(d) { return d.value }), 0.00]);
 
   var polygon_vertices = d3.select("#convex_hull").data()[0];
-  console.log(polygon_vertices[0])
 
   // overlap contour on convex hull
   svg.insert("g")
@@ -25,7 +24,7 @@ function drawContour(values){
     .attr("fill", function(d) { return color(d.value); })
     .attr("d", d3.geoPath())
     .attr("opacity", function(d){
-      // polygon外のcontourを非表示にする
+      // hide coutours outside of polygon
       let flag = true;
       d.coordinates.forEach(function(coordinate){
         coordinate[0].forEach(function(c){
