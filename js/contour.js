@@ -1,17 +1,17 @@
 function drawContour(values){
-  var contourDensity = d3.contourDensity()
+  let contourDensity = d3.contourDensity()
     .x(function(d) { return xScale(d["x"]); })
     .y(function(d) { return yScale(d["y"]); })
     .size([width, height])
     .cellSize(50)
     .bandwidth(15)
 
-  var contourDensityValues = contourDensity(values);
+  let contourDensityValues = contourDensity(values);
 
-  var color = d3.scaleSequential(function(t) { return d3.interpolate("cyan", "blue")(1-t); })
+  const color = d3.scaleSequential(function(t) { return d3.interpolate("cyan", "blue")(1-t); })
     .domain([d3.max(contourDensityValues, function(d) { return d.value }), 0.00]);
 
-  var polygon_vertices = d3.select("#convex_hull").data()[0];
+  let polygon_vertices = d3.select("#convex_hull").data()[0];
 
   // overlap contour on convex hull
   svg.insert("g")
@@ -36,9 +36,8 @@ function drawContour(values){
 }
 
 function drawConvexHull(values){
-  var vertices = values.map(function(d) { return [xScale(d["x"]), yScale(d["y"])]; });
-  var polygon = d3.polygonHull(vertices);
-  console.log(polygon);
+  let vertices = values.map(function(d) { return [xScale(d["x"]), yScale(d["y"])]; });
+  let polygon = d3.polygonHull(vertices);
 
   // add convex hull
   svg.append("g")
