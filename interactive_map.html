@@ -16,6 +16,18 @@
     </div>
   </body>
 
+  <style>
+
+  .line {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1.5px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  </style>
+
   <script>
     const width = 800;
     const height = 600;
@@ -38,7 +50,21 @@
       .append("svg")
       .attr("viewBox", "0 0 " + width  + " " + height)
       .attr("width", "100%")
-      .attr("height", "100%");
+      .attr("height", "100%")
+      .attr("class", "map");
+
+    let render_line = d3.line().x(function(d) {
+        return d[0];
+      }).y(function(d) {
+        return d[1];
+      });
+
+    let active_line = null;
+    let lines_layer =
+      svg.call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
 
     const data = Array.from(Array(47), (v, k) => Math.random())
     d3.json("json/japan.geojson").then(function(json) {
@@ -55,5 +81,20 @@
           return data[i];
         });
     });
+
+    function dragstarted() {
+      activeLine = svg.append("path").datum([]).attr("class", "line");
+      activeLine.datum().push(d3.mouse(this));
+    }
+
+    function dragged() {
+      activeLine.datum().push(d3.mouse(this));
+      activeLine.attr("d", render_line);
+    }
+
+    function dragended() {
+      activeLine = null;
+      d3.selectAll(".line").remove();
+    }
   </script>
 </html>
