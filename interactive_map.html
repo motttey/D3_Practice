@@ -68,12 +68,12 @@
 
     const data = Array.from(Array(47), (v, k) => Math.random())
     d3.json("json/japan.geojson").then(function(json) {
-      console.log(json);
       svg.selectAll("path")
         .data(json.features)
         .enter()
         .append("path")
         .attr("d", path)
+        .attr("class", "pref")
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
         .style("fill", "blue")
@@ -93,8 +93,27 @@
     }
 
     function dragended() {
-      activeLine = null;
+      let selectedPref = [];
       d3.selectAll(".line").remove();
+      d3.selectAll(".pref")
+        .each(function(d, i, node){
+          if (lineClossingPolygon(d.geometry.coordinates[0], activeLine)){
+            selectedPref.push(i);
+          }
+        });
+      activeLine = null;
+      console.log(selectedPref);
+    }
+
+    function lineClossingPolygon(polygon, line){
+      let retVal = false;
+      activeLine.datum().forEach((segment, i) => {
+        if (d3.polygonContains(polygon, projection.invert(segment))) {
+          retVal =  true;
+          return;
+        }
+      });
+      return retVal;
     }
   </script>
 </html>
