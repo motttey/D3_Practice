@@ -80,7 +80,7 @@
     const margin = 50;
 
     let xScale = d3.scaleBand().rangeRound([margin, width - margin]).padding(0.1);
-    let yScale = d3.scaleLinear().rangeRound([bar_height - margin, margin]);
+    let yScale = d3.scaleLinear().rangeRound([bar_height - margin, 0]);
 
     d3.json("json/japan.geojson").then(function(json) {
       svg.selectAll("path")
@@ -97,7 +97,6 @@
         });
 
       console.log(json.features);
-
       xScale.domain(json.features.map(function(d) {
         return d.properties.pref_j;
       }));
@@ -131,7 +130,6 @@
           .style("opacity", function(d, i){
             return data[i];
           });
-
     });
 
     function dragstarted() {
@@ -155,6 +153,12 @@
         });
       activeLine = null;
       console.log(selectedPref);
+      d3.json("json/japan.geojson").then(function(json) {
+        let filterdJson = json.features.filter( function ( x, i ) {
+          return selectedPref.includes(i);
+        } );
+        drawBarChart(filterdJson, selectedPref);
+      });
     }
 
     function lineClossingPolygon(polygon, line){
@@ -166,6 +170,57 @@
         }
       });
       return retVal;
+    }
+
+    function drawBarChart(json, selectedPref){
+      xScale.domain(json.map(function(d) {
+        return d.properties.pref_j;
+      }));
+      yScale.domain([0, d3.max(data)]);
+
+      svg_bar.select(".axis--x")
+          .attr("transform", "translate(0," + (bar_height - margin) + ")")
+          .call(d3.axisBottom(xScale))
+          .selectAll("text")
+            .attr("x", 9)
+            .attr("y", 0)
+            .attr("dy", ".35em")
+            .attr("transform", "rotate(90)")
+            .style("text-anchor", "start");
+
+      let updatedBars = svg_bar.selectAll(".bar")
+        .data(json);
+
+      updatedBars
+        .enter()
+        .append("rect")
+        .transition().duration(1000)
+          .attr("class", "bar")
+          .attr("x", function(d) { return xScale(d.properties.pref_j); })
+          .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
+          .attr("width", xScale.bandwidth())
+          .attr("height", function(d, i) { return bar_height - yScale(data[selectedPref[i]]); })
+          .style("fill", "blue")
+          .style("opacity", function(d, i){
+            return data[selectedPref[i]];
+          });
+
+      updatedBars
+        .transition().duration(1000)
+          .attr("x", function(d) { return xScale(d.properties.pref_j); })
+          .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
+          .attr("width", xScale.bandwidth())
+          .attr("height", function(d, i) { return bar_height - yScale(data[selectedPref[i]]); })
+          .style("fill", "blue")
+          .style("opacity", function(d, i){
+            return data[selectedPref[i]];
+          });
+
+      updatedBars.exit().transition()
+    	  .style("opacity","0")
+    	  .attr("transform", "translate(0," + (bar_height) + ")")
+    	  .remove();
+
     }
   </script>
 </html>
