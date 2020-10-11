@@ -31,8 +31,10 @@
   <script>
     const width = 800;
     const height = 600;
+    const bar_height = 400;
+
     const centerPos = [137.0, 38.2]; // 地図のセンター位置
-    const scale = 1000; // 地図のスケール
+    const scale = 1500; // 地図のスケール
 
     // 地図の投影設定
     const projection = d3
@@ -47,11 +49,19 @@
     // SVG要素を追加
     const svg = d3
       .select("#map_div")
-      .append("svg")
+      .select("svg")
       .attr("viewBox", "0 0 " + width  + " " + height)
       .attr("width", "100%")
       .attr("height", "100%")
       .attr("class", "map");
+
+    const svg_bar = d3
+      .select("#bar_chart_div")
+      .select("svg")
+      .attr("viewBox", "0 0 " + width  + " " + bar_height)
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("class", "bar_chart");
 
     let render_line = d3.line().x(function(d) {
         return d[0];
@@ -66,7 +76,12 @@
         .on("drag", dragged)
         .on("end", dragended));
 
-    const data = Array.from(Array(47), (v, k) => Math.random())
+    const data = Array.from(Array(47), (v, k) => Math.random());
+    const margin = 50;
+
+    let xScale = d3.scaleBand().rangeRound([margin, width - margin]).padding(0.1);
+    let yScale = d3.scaleLinear().rangeRound([bar_height - margin, margin]);
+
     d3.json("json/japan.geojson").then(function(json) {
       svg.selectAll("path")
         .data(json.features)
@@ -80,6 +95,43 @@
         .style("opacity", function(d, i){
           return data[i];
         });
+
+      console.log(json.features);
+
+      xScale.domain(json.features.map(function(d) {
+        return d.properties.pref_j;
+      }));
+      yScale.domain([0, d3.max(data)]);
+
+      svg_bar.append("g")
+          .attr("class", "axis axis--x")
+          .attr("transform", "translate(0," + (bar_height - margin) + ")")
+          .call(d3.axisBottom(xScale))
+          .selectAll("text")
+            .attr("x", 9)
+            .attr("y", 0)
+            .attr("dy", ".35em")
+            .attr("transform", "rotate(90)")
+            .style("text-anchor", "start");
+
+      svg_bar.append("g")
+          .attr("class", "axis axis--y")
+          .attr("transform", "translate(" + margin + "," + 0 + ")")
+          .call(d3.axisLeft(yScale));
+
+      svg_bar.selectAll(".bar")
+        .data(json.features)
+        .enter().append("rect")
+          .attr("class", "bar")
+          .attr("x", function(d) { return xScale(d.properties.pref_j); })
+          .attr("y", function(d, i) { return yScale(data[i]) - margin; })
+          .attr("width", xScale.bandwidth())
+          .attr("height", function(d, i) { return bar_height - yScale(data[i]); })
+          .style("fill", "blue")
+          .style("opacity", function(d, i){
+            return data[i];
+          });
+
     });
 
     function dragstarted() {
