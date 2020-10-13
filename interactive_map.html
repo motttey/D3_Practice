@@ -91,9 +91,8 @@
         .attr("class", "pref")
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
-        .style("fill", "blue")
-        .style("opacity", function(d, i){
-          return data[i];
+        .style("fill", function(d,i){
+          return d3.interpolateRdBu(data[i]);
         });
 
       console.log(json.features);
@@ -182,9 +181,8 @@
           .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
           .attr("width", xScale.bandwidth())
           .attr("height", function(d, i) { return bar_height - yScale(data[selectedPref[i]]); })
-          .style("fill", "blue")
-          .style("opacity", function(d, i){
-            return data[selectedPref[i]];
+          .style("fill", function(d, i){
+            return d3.interpolateRdBu(data[selectedPref[i]]);
           });
 
       updatedBars
@@ -193,9 +191,8 @@
           .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
           .attr("width", xScale.bandwidth())
           .attr("height", function(d, i) { return bar_height - yScale(data[selectedPref[i]]); })
-          .style("fill", "blue")
-          .style("opacity", function(d, i){
-            return data[selectedPref[i]];
+          .style("fill", function(d, i){
+            return d3.interpolateRdBu(data[selectedPref[i]]);
           });
 
       updatedBars
