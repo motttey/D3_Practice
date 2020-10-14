@@ -135,9 +135,14 @@
       d3.selectAll(".line").remove();
       d3.selectAll(".pref")
         .each(function(d, i, node){
-          if (lineClossingPolygon(d.geometry.coordinates[0], activeLine)){
-            selectedPref.push(i);
-          }
+          let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
+          if (isClossed) selectedPref.push(i);
+          d3.select(this).style("stroke-width", function(){
+            return (isClossed)? 1.0: 0.25;
+          })
+          d3.select(this).style("stroke", function(){
+            return (isClossed)? "black": "gray";
+          });
         });
       activeLine = null;
       console.log(selectedPref);
