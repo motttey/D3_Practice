@@ -95,7 +95,6 @@
           return d3.interpolateRdBu(data[i]);
         });
 
-      console.log(json.features);
       xScale.domain(json.features.map(function(d) {
         return d.properties.pref_j;
       }));
@@ -132,33 +131,33 @@
 
     function dragended() {
       let selectedPref = [];
-      d3.selectAll(".line").remove();
+      let filterdJson = [];
+
       d3.selectAll(".pref")
         .each(function(d, i, node){
           let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
-          if (isClossed) selectedPref.push(i);
-          d3.select(this).style("stroke-width", function(){
-            return (isClossed)? 1.0: 0.25;
-          })
-          d3.select(this).style("stroke", function(){
-            return (isClossed)? "black": "gray";
-          });
+          if (isClossed) {
+            filterdJson.push(d);
+            selectedPref.push(i);
+          }
+          // update chart
+          d3.select(this)
+            .style("stroke-width", function(){
+              return (isClossed)? 1.0: 0.25;
+            })
+            .style("stroke", function(){
+              return (isClossed)? "black": "gray";
+            });
         });
-      activeLine = null;
-      console.log(selectedPref);
-      d3.json("json/japan.geojson").then(function(json) {
-        let filterdJson = json.features.filter( function ( x, i ) {
-          return selectedPref.includes(i);
-        } );
-        drawBarChart(filterdJson, selectedPref);
-      });
+      if (filterdJson.length > 0) drawBarChart(filterdJson, selectedPref);
+      activeLine.remove();
     }
 
     function lineClossingPolygon(polygon, line){
       let retVal = false;
       activeLine.datum().forEach((segment, i) => {
         if (d3.polygonContains(polygon, projection.invert(segment))) {
-          retVal =  true;
+          retVal = true;
           return;
         }
       });
@@ -166,6 +165,8 @@
     }
 
     function drawBarChart(json, selectedPref){
+      console.log(json);
+
       xScale.domain(json.map(function(d) {
         return d.properties.pref_j;
       }));
@@ -195,7 +196,9 @@
           .attr("x", function(d) { return xScale(d.properties.pref_j); })
           .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
           .attr("width", xScale.bandwidth())
-          .attr("height", function(d, i) { return bar_height - yScale(data[selectedPref[i]]); })
+          .attr("height", function(d, i) {
+            return bar_height - yScale(data[selectedPref[i]]);
+          })
           .style("fill", function(d, i){
             return d3.interpolateRdBu(data[selectedPref[i]]);
           });
