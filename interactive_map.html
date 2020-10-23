@@ -75,7 +75,7 @@
         .on("drag", dragged)
         .on("end", dragended));
 
-    const data = Array.from(Array(47), (v, k) => Math.random());
+    const data = Array.from(Array(47), (v, k) => Math.random(1));
     const margin = 50;
 
     let xScale = d3.scaleBand().rangeRound([margin, width - margin]).padding(0.1);
@@ -91,7 +91,7 @@
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
         .style("fill", function(d,i){
-          return d3.interpolateRdBu(data[i]);
+          return d3.interpolateRdBu(data[i]/d3.max(data));
         });
 
       xScale.domain(json.features.map(function(d) {
@@ -186,7 +186,7 @@
           .attr("width", xScale.bandwidth())
           .attr("height", function(d, i) { return bar_height - yScale(data[selectedPref[i]]); })
           .style("fill", function(d, i){
-            return d3.interpolateRdBu(data[selectedPref[i]]);
+            return d3.interpolateRdBu(data[selectedPref[i]]/d3.max(data));
           });
 
       updatedBars
@@ -198,7 +198,7 @@
             return bar_height - yScale(data[selectedPref[i]]);
           })
           .style("fill", function(d, i){
-            return d3.interpolateRdBu(data[selectedPref[i]]);
+            return d3.interpolateRdBu(data[selectedPref[i]]/d3.max(data));
           });
 
       updatedBars
