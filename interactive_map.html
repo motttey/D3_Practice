@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     <meta charset="utf-8"/>
     <title>D3 Interactive Map</title>
   </head>
@@ -71,9 +71,37 @@
     let active_line = null;
     let lines_layer =
       svg.call(d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended));
+        .on("start", (event) => {
+          activeLine = svg.append("path").datum([]).attr("class", "line");
+          activeLine.datum().push(d3.pointers(event)[0]);
+        })
+        .on("drag", (event) => {
+          activeLine.datum().push(d3.pointers(event)[0]);
+          activeLine.attr("d", render_line);
+        })
+        .on("end", (event) => {
+          let selectedPref = [];
+          let filterdJson = [];
+
+          d3.selectAll(".pref")
+            .each(function(d, i){
+              let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
+              if (isClossed) {
+                filterdJson.push(d);
+                selectedPref.push(i);
+              }
+              // update chart
+              d3.select(this)
+                .style("stroke-width", function(){
+                  return (isClossed)? 1.0: 0.25;
+                })
+                .style("stroke", function(){
+                  return (isClossed)? "black": "gray";
+                });
+            });
+          if (filterdJson.length > 0) drawBarChart(filterdJson, selectedPref);
+          activeLine.remove();
+        }));
 
     const data = Array.from(Array(47), (v, k) => Math.random(1));
     const margin = 50;
@@ -117,26 +145,27 @@
       drawBarChart(json.features, Array.from(Array(47), (v, k) => k ));
     });
 
-    function dragstarted() {
+    function dragstarted(event) {
       activeLine = svg.append("path").datum([]).attr("class", "line");
-      activeLine.datum().push(d3.mouse(this));
+      console.log(d3.pointer(event));
+      activeLine.datum().push(d3.pointer(event));
     }
 
-    function dragged() {
-      activeLine.datum().push(d3.mouse(this));
+    function dragged(event) {
+      activeLine.datum().push(d3.pointer(event));
       activeLine.attr("d", render_line);
     }
 
-    function dragended() {
+    function dragended(event) {
       let selectedPref = [];
       let filterdJson = [];
 
       d3.selectAll(".pref")
-        .each(function(d, i, node){
+        .each(function(event, d){
           let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
           if (isClossed) {
             filterdJson.push(d);
-            selectedPref.push(i);
+            selectedPref.push(selection.nodes().indexOf(event.currentTarget));
           }
           // update chart
           d3.select(this)
