@@ -145,41 +145,6 @@
       drawBarChart(json.features, Array.from(Array(47), (v, k) => k ));
     });
 
-    function dragstarted(event) {
-      activeLine = svg.append("path").datum([]).attr("class", "line");
-      console.log(d3.pointer(event));
-      activeLine.datum().push(d3.pointer(event));
-    }
-
-    function dragged(event) {
-      activeLine.datum().push(d3.pointer(event));
-      activeLine.attr("d", render_line);
-    }
-
-    function dragended(event) {
-      let selectedPref = [];
-      let filterdJson = [];
-
-      d3.selectAll(".pref")
-        .each(function(event, d){
-          let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
-          if (isClossed) {
-            filterdJson.push(d);
-            selectedPref.push(selection.nodes().indexOf(event.currentTarget));
-          }
-          // update chart
-          d3.select(this)
-            .style("stroke-width", function(){
-              return (isClossed)? 1.0: 0.25;
-            })
-            .style("stroke", function(){
-              return (isClossed)? "black": "gray";
-            });
-        });
-      if (filterdJson.length > 0) drawBarChart(filterdJson, selectedPref);
-      activeLine.remove();
-    }
-
     function lineClossingPolygon(polygon, line){
       let retVal = false;
       activeLine.datum().forEach((segment, i) => {
