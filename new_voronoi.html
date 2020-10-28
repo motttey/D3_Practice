@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Delaunay</title>
+  </head>
+  <body>
+    <h1>D3 Delaunay</h1>
+    <div id="voronoi_div">
+      <svg id="voronoi"></svg>
+    </div>
+  </body>
+
+  <style>
+  </style>
+  <script>
+    const width = 800;
+    const height = 600;
+
+    const randomX = d3.randomNormal(width / 2, 80);
+    const randomY = d3.randomNormal(height / 2, 80);
+
+    const data = d3.range(250)
+          .map(() => ([randomX(), randomY()]))
+          .filter(d => 0 <= d[0] && d[0] <= width && 0 <= d[1] && d[1] <= height);
+
+    let delaunay = d3.Delaunay.from(data);
+    let voronoi = delaunay.voronoi([-1, -1, width + 1, height + 1]);
+
+    const cells = data.map((d, i) => [d, voronoi.cellPolygon(i)]);
+
+    const polygons = voronoi.cellPolygons();
+
+    // SVG要素を追加
+    const svg = d3
+      .select("#voronoi_div")
+      .select("svg")
+      .attr("viewBox", "0 0 " + width  + " " + height)
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("class", "voronoi_example");
+
+    /*
+    // 重心からのパス?
+    svg.append("g")
+      .attr("stroke", "orange")
+      .selectAll("path")
+      .data(cells)
+      .join("path")
+        .attr("d", ([d, cell]) => `M${d3.polygonCentroid(cell)}L${d}`);
+    */
+
+    svg.append("path")
+        .attr("fill", "red")
+        .attr("stroke", "#ccc")
+        .attr("d", voronoi.render());
+
+    svg.selectAll('path')
+        .data( data.map((d,i) => voronoi.renderCell(i)) )
+      .join('path')
+        .attr('d', d => d)
+        .style('fill', (d,i) => d3.interpolateRdBu( Math.random() ))
+        .style('opacity', 0.8)
+        .style('stroke', 'white')
+        .style('stroke-opacity', 0.2)
+
+    svg.append("path")
+        .attr("d", delaunay.renderPoints(null, 1));
+
+  </script>
+</html>
