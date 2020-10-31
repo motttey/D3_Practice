@@ -21,7 +21,7 @@
     const randomX = d3.randomNormal(width / 2, 80);
     const randomY = d3.randomNormal(height / 2, 80);
 
-    const data = d3.range(250)
+    let data = d3.range(150)
           .map(() => ([randomX(), randomY()]))
           .filter(d => 0 <= d[0] && d[0] <= width && 0 <= d[1] && d[1] <= height);
 
@@ -54,16 +54,34 @@
     svg.append("path")
         .attr("fill", "red")
         .attr("stroke", "#ccc")
-        .attr("d", voronoi.render());
+        .attr("d", voronoi.renderBounds());
 
     svg.selectAll('path')
         .data( data.map((d,i) => voronoi.renderCell(i)) )
       .join('path')
         .attr('d', d => d)
         .style('fill', (d,i) => d3.interpolateRdBu( Math.random() ))
-        .style('opacity', 0.8)
+        .style('opacity', 0.5)
         .style('stroke', 'white')
         .style('stroke-opacity', 0.2)
+
+
+
+    data = d3.range(250)
+        .map(() => ([randomX(), randomY()]))
+        .filter(d => 0 <= d[0] && d[0] <= width && 0 <= d[1] && d[1] <= height);
+    voronoi.update();
+
+    // triangleを描画
+
+    svg.selectAll('path')
+        .data( data.map((d,i) => delaunay.renderTriangle(i)) )
+      .join('path')
+        .attr('d', d => d)
+        .style('fill', (d,i) => d3.interpolateRdBu( Math.random() ))
+        .style('opacity', 0.5)
+        .style('stroke', 'blue')
+        .style('stroke-opacity', 0.2);
 
     svg.append("path")
         .attr("d", delaunay.renderPoints(null, 1));
