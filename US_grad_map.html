@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 US Map</title>
+  </head>
+  <body>
+    <h1>D3 US Map</h1>
+    <div id="US_map_div">
+      <svg id="US_map"></svg>
+    </div>
+  </body>
+
+  <style>
+  </style>
+  <script>
+    const width = 800;
+    const height = 800;
+
+    const centerPos = [-95.0, 30.0]; // 地図のセンター位置
+    const scale = 700; // 地図のスケール
+
+    // 地図の投影設定
+    const projection = d3
+      .geoMercator()
+      .center(centerPos)
+      .translate([width / 2, height / 2])
+      .scale(scale);
+
+    // 地図をpathに投影(変換)
+    const path = d3.geoPath().projection(projection);
+
+    // SVG要素を追加
+    const svg = d3
+      .select("#US_map_div")
+      .select("svg")
+      .attr("viewBox", "0 0 " + width  + " " + height)
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("class", "map");
+
+    const grad = svg.append("defs").append("linearGradient")
+      .attr("id", "grad")
+      .attr("x1", "10%")
+      .attr("x2", "0%")
+      .attr("y1", "0%")
+      .attr("y2", "100%")
+
+    grad.append("stop")
+      .attr("offset", "0%")
+      .style("stop-color", "red")
+      .style("stop-opacity", 1)
+
+    grad.append("stop")
+      .attr("offset", "100%")
+      .style("stop-color", "blue")
+      .style("stop-opacity", 1)
+
+    d3.json("json/us.geojson").then(function(json) {
+      svg.selectAll("path")
+        .data(json.features)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .attr("class", "pref")
+        .style("stroke", "gray")
+        .style("stroke-width", 0.25)
+        .style("fill", function(d,i){
+          return "url(#grad)"
+        });
+    });
+  </script>
+</html>
