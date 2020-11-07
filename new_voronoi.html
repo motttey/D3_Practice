@@ -60,7 +60,9 @@
         .data( data.map((d,i) => voronoi.renderCell(i)) )
       .join('path')
         .attr('d', d => d)
-        .style('fill', (d,i) => d3.interpolateRdBu( Math.random() ))
+        .style('fill', function(d,i){
+          return d3.interpolateRdBu( Math.random());
+        })
         .style('opacity', 0.5)
         .style('stroke', 'white')
         .style('stroke-opacity', 0.2)
@@ -73,7 +75,7 @@
     voronoi.update();
 
     // triangleを描画
-
+    /*
     svg.selectAll('path')
         .data( data.map((d,i) => delaunay.renderTriangle(i)) )
       .join('path')
@@ -82,9 +84,13 @@
         .style('opacity', 0.5)
         .style('stroke', 'blue')
         .style('stroke-opacity', 0.2);
+    */
 
     svg.append("path")
-        .attr("d", delaunay.renderPoints(null, 1));
-
+        .attr("d", delaunay.renderPoints(null, 1))
+        .style('fill', (d,i) => d3.interpolateRdBu( Math.random() ))
+        .style('opacity', 0.5)
+        .style('stroke', 'blue')
+        .style('stroke-opacity', 0.2);
   </script>
 </html>
