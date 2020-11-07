@@ -40,22 +40,11 @@
       .attr("height", "100%")
       .attr("class", "map");
 
-    const grad = svg.append("defs").append("linearGradient")
-      .attr("id", "grad")
-      .attr("x1", "10%")
-      .attr("x2", "0%")
-      .attr("y1", "0%")
-      .attr("y2", "100%")
-
-    grad.append("stop")
-      .attr("offset", "0%")
-      .style("stop-color", "red")
-      .style("stop-opacity", 1)
-
-    grad.append("stop")
-      .attr("offset", "100%")
-      .style("stop-color", "blue")
-      .style("stop-opacity", 1)
+    const data = [
+      { "R" : 0.1, "D" : 0.9},
+      { "R" : 0.5, "D" : 0.5},
+      { "R" : 0.9, "D" : 0.1},
+    ];
 
     d3.json("json/us.geojson").then(function(json) {
       svg.selectAll("path")
@@ -67,8 +56,30 @@
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
         .style("fill", function(d,i){
-          return "url(#grad)"
+          const name = "grad" + i.toString();
+          let grad = svg.append("defs").append("linearGradient")
+                .attr("id", name)
+                .attr("x1", "10%")
+                .attr("x2", "0%")
+                .attr("y1", "0%")
+                .attr("y2", "100%")
+
+          console.log(data[i%3].R - 0.5);
+          console.log(1 - (data[i%3].D - 0.5));
+
+          grad.append("stop")
+            .attr("offset", data[i%3].R - 0.5)
+            .style("stop-color", "red")
+            .style("stop-opacity", 1)
+
+          grad.append("stop")
+            .attr("offset", 1 - (data[i%3].D - 0.5))
+            .style("stop-color", "blue")
+            .style("stop-opacity", 1)
+
+          return "url(#" + name + ")"
         });
     });
+
   </script>
 </html>
