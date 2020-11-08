@@ -64,17 +64,19 @@
                 .attr("y1", "0%")
                 .attr("y2", "100%")
 
-          console.log(data[i%3].R - 0.5);
-          console.log(1 - (data[i%3].D - 0.5));
+          const R_ = data[i%3].R;
+          const D_ = data[i%3].D;
+          let offset = (R_ > D_)? [R_ - 0.5, 1 - (D_ - 0.5)]: [D_ - 0.5, 1 - (R_ - 0.5)];
+          let col = (R_ > D_)? ["#E9141D", "#0015BC"]: ["#0015BC", "#E9141D"]
 
           grad.append("stop")
-            .attr("offset", data[i%3].R - 0.5)
-            .style("stop-color", "red")
+            .attr("offset", offset[0])
+            .style("stop-color", col[0])
             .style("stop-opacity", 1)
 
           grad.append("stop")
-            .attr("offset", 1 - (data[i%3].D - 0.5))
-            .style("stop-color", "blue")
+            .attr("offset", offset[1])
+            .style("stop-color", col[1])
             .style("stop-opacity", 1)
 
           return "url(#" + name + ")"
