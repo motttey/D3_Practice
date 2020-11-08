@@ -46,6 +46,8 @@
       { "R" : 0.9, "D" : 0.1},
     ];
 
+    const colors = ["#E9141D", "#0015BC"];
+
     d3.json("json/us.geojson").then(function(json) {
       svg.selectAll("path")
         .data(json.features)
@@ -57,17 +59,20 @@
         .style("stroke-width", 0.25)
         .style("fill", function(d,i){
           const name = "grad" + i.toString();
-          let grad = svg.append("defs").append("linearGradient")
+          let grad = svg.append("defs").append("radialGradient")
                 .attr("id", name)
-                .attr("x1", "10%")
+                .attr("cx", "50%")
+                .attr("cy", "50%");
+/*
+                .attr("x1", "0%")
                 .attr("x2", "0%")
                 .attr("y1", "0%")
                 .attr("y2", "100%")
-
+*/
           const R_ = data[i%3].R;
           const D_ = data[i%3].D;
           let offset = (R_ > D_)? [R_ - 0.5, 1 - (D_ - 0.5)]: [D_ - 0.5, 1 - (R_ - 0.5)];
-          let col = (R_ > D_)? ["#E9141D", "#0015BC"]: ["#0015BC", "#E9141D"]
+          let col = (R_ > D_)? colors: colors.reverse()
 
           grad.append("stop")
             .attr("offset", offset[0])
