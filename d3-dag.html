@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://unpkg.com/d3-dag@0.4.3"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Dag</title>
+  </head>
+  <body>
+    <h1>D3 Dag</h1>
+    <div id="dag_div">
+      <svg id="dag"></svg>
+    </div>
+  </body>
+  <script>
+    // draw graphical DAG by Sugiyama layout
+    // https://github.com/ArquintL/d3-dag-example
+
+    const width = 800;
+    const height = 500;
+    const nodeRadius = 20;
+
+    // let dag = d3.sugiyama();
+    let layering = d3.layeringSimplex();
+    let decrossing = d3.decrossTwoLayer().order(d3.twolayerMedian());
+    let coord = d3.coordGreedy();
+
+    const layout = d3.sugiyama()
+      .size([width, height])
+      .layering(d3.layeringLongestPath())
+      .decross(d3.decrossOpt())
+      .coord(d3.coordGreedy());
+      // .separation(1);
+
+    const svg = d3.select("#dag_div")
+      .select("svg")
+      .attr("width", width + 50)
+      .attr("height", height + 50)
+      .attr("transform", "translate(50,50)")
+      .attr("class", "dag");
+
+    const defs = svg.append('defs');
+
+    d3.json("https://raw.githubusercontent.com/erikbrinkman/d3-dag/master/examples/grafo.json")
+      .then(function(json)
+    {
+
+      let reader = d3.dagStratify();
+      let dag = reader(json);
+
+      console.log(dag);
+      console.log(layout);
+
+      layout(dag);
+
+      const steps = dag.size();
+      const interp = d3.interpolateRainbow;
+      const colorMap = {};
+      for (const [i, node] of dag.idescendants().entries()) {
+        colorMap[node.id] = interp(i / steps);
+      }
+
+      const line = d3.line()
+          .curve(d3.curveCatmullRom)
+          .x(d => d.x)
+          .y(d => d.y);
+
+      // Plot edges
+      svg.append('g')
+        .selectAll('path')
+        .data(dag.links())
+        .enter()
+        .append('path')
+        .attr('d', ({ points }) => line(points))
+        .attr('fill', 'none')
+        .attr('stroke-width', 3)
+        .attr('stroke', ({source, target}) => {
+          const gradId = `${source.id}-${target.id}`;
+          const grad = defs.append('linearGradient')
+            .attr('id', gradId)
+            .attr('gradientUnits', 'userSpaceOnUse')
+            .attr('x1', source.x)
+            .attr('x2', target.x)
+            .attr('y1', source.y)
+            .attr('y2', target.y);
+          grad.append('stop').attr('offset', '0%').attr('stop-color', colorMap[source.id]);
+          grad.append('stop').attr('offset', '100%').attr('stop-color', colorMap[target.id]);
+          return `url(#${gradId})`;
+        });
+
+        const nodes = svg.append('g')
+          .selectAll('g')
+          .data(dag.descendants())
+          .enter()
+          .append('g')
+          .attr('transform', ({x, y}) => `translate(${x}, ${y})`);
+
+        // Plot node circles
+        nodes.append('circle')
+          .attr('r', nodeRadius)
+          .attr('fill', n => colorMap[n.id]);
+
+        // Add text to nodes
+        nodes.append('text')
+          .text(d => d.id)
+          .attr('font-weight', 'bold')
+          .attr('font-family', 'sans-serif')
+          .attr('text-anchor', 'middle')
+          .attr('alignment-baseline', 'middle')
+          .attr('fill', 'white');
+        });
+  </script>
+</html>
