@@ -19,6 +19,7 @@
     const width = 800;
     const height = 500;
     const nodeRadius = 20;
+    const margin = {top: 50, right: 150, bottom: 100, left: 50};
 
     // let dag = d3.sugiyama();
     let layering = d3.layeringSimplex();
@@ -34,80 +35,106 @@
 
     const svg = d3.select("#dag_div")
       .select("svg")
-      .attr("width", width + 50)
-      .attr("height", height + 50)
-      .attr("transform", "translate(50,50)")
+      .attr("width", width + margin.right)
+      .attr("height", height + margin.bottom)
       .attr("class", "dag");
 
     const defs = svg.append('defs');
 
-    d3.json("https://raw.githubusercontent.com/erikbrinkman/d3-dag/master/examples/grafo.json")
-      .then(function(json)
-    {
+    const data = [
+        {
+          "id": "0",
+          "parentIds": ["5"]
+        },
+        {
+          "id": "1",
+          "parentIds": ["0"]
+        },
+        {
+          "id": "2",
+          "parentIds": ["5"]
+        },
+        {
+          "id": "3",
+          "parentIds": ["6"]
+        },
+        {
+          "id": "4",
+          "parentIds": ["3"]
+        },
+        {
+          "id": "5",
+          "parentIds": ["4"]
+        },
+        {
+          "id": "6",
+          "parentIds": []
+        }
+    ];
 
-      let reader = d3.dagStratify();
-      let dag = reader(json);
+    let reader = d3.dagStratify();
+    let dag = reader(data);
 
-      console.log(dag);
-      console.log(layout);
+    layout(dag);
 
-      layout(dag);
+    const steps = dag.size();
+    const interp = d3.interpolateRainbow;
+    const colorMap = {};
+    for (const [i, node] of dag.idescendants().entries()) {
+      colorMap[node.id] = interp(i / steps);
+    }
 
-      const steps = dag.size();
-      const interp = d3.interpolateRainbow;
-      const colorMap = {};
-      for (const [i, node] of dag.idescendants().entries()) {
-        colorMap[node.id] = interp(i / steps);
-      }
+    const line = d3.line()
+        .curve(d3.curveCatmullRom)
+        .x(d => d.x)
+        .y(d => d.y);
 
-      const line = d3.line()
-          .curve(d3.curveCatmullRom)
-          .x(d => d.x)
-          .y(d => d.y);
+    // Plot edges
+    svg.append('g')
+      .attr("transform", "translate(" + (margin.left) + "," + (margin.top) + ")")
+      .selectAll('path')
+      .data(dag.links())
+      .enter()
+      .append('path')
+      .attr('d', ({ points }) => line(points))
+      .attr('fill', 'none')
+      .attr('stroke-width', 3)
+      .attr('stroke', ({source, target}) => {
+        const gradId = `${source.id}-${target.id}`;
+        const grad = defs.append('linearGradient')
+          .attr('id', gradId)
+          .attr('gradientUnits', 'userSpaceOnUse')
+          .attr('x1', source.x)
+          .attr('x2', target.x)
+          .attr('y1', source.y)
+          .attr('y2', target.y);
+        grad.append('stop').attr('offset', '0%').attr('stop-color', colorMap[source.id]);
+        grad.append('stop').attr('offset', '100%').attr('stop-color', colorMap[target.id]);
+        return `url(#${gradId})`;
+      });
 
-      // Plot edges
+    const nodes =
       svg.append('g')
-        .selectAll('path')
-        .data(dag.links())
-        .enter()
-        .append('path')
-        .attr('d', ({ points }) => line(points))
-        .attr('fill', 'none')
-        .attr('stroke-width', 3)
-        .attr('stroke', ({source, target}) => {
-          const gradId = `${source.id}-${target.id}`;
-          const grad = defs.append('linearGradient')
-            .attr('id', gradId)
-            .attr('gradientUnits', 'userSpaceOnUse')
-            .attr('x1', source.x)
-            .attr('x2', target.x)
-            .attr('y1', source.y)
-            .attr('y2', target.y);
-          grad.append('stop').attr('offset', '0%').attr('stop-color', colorMap[source.id]);
-          grad.append('stop').attr('offset', '100%').attr('stop-color', colorMap[target.id]);
-          return `url(#${gradId})`;
-        });
+      .attr("transform", "translate(" + (margin.left) + "," + (margin.top) + ")")
+      .selectAll('g')
+      .data(dag.descendants())
+      .enter()
+      .append('g')
+      .attr('transform', ({x, y}) => `translate(${x}, ${y})`);
 
-        const nodes = svg.append('g')
-          .selectAll('g')
-          .data(dag.descendants())
-          .enter()
-          .append('g')
-          .attr('transform', ({x, y}) => `translate(${x}, ${y})`);
+    // Plot node circles
+    nodes.append('circle')
+      .attr('r', nodeRadius)
+      .attr('fill', n => colorMap[n.id]);
 
-        // Plot node circles
-        nodes.append('circle')
-          .attr('r', nodeRadius)
-          .attr('fill', n => colorMap[n.id]);
-
-        // Add text to nodes
-        nodes.append('text')
-          .text(d => d.id)
-          .attr('font-weight', 'bold')
-          .attr('font-family', 'sans-serif')
-          .attr('text-anchor', 'middle')
-          .attr('alignment-baseline', 'middle')
-          .attr('fill', 'white');
-        });
+    // Add text to nodes
+    nodes.append('text')
+      .text(d => d.id)
+      .attr('font-weight', 'bold')
+      .attr('font-family', 'sans-serif')
+      .attr('text-anchor', 'middle')
+      .attr('alignment-baseline', 'middle')
+      .attr('fill', 'white');
+      
   </script>
 </html>
