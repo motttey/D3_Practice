@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="js/contour.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Treemap</title>
+  </head>
+  <body>
+    <h1>D3 Treemap</h1>
+    <div id="treemap_div">
+      <svg id="treemap"></svg>
+    </div>
+  </body>
+
+  <style>
+  </style>
+
+  <script>
+  const margin = {top: 50, right: 50, bottom: 50, left: 50},
+    width = 1000 - margin.left - margin.right,
+    height = 1000 - margin.top - margin.bottom;
+
+  const data = {
+    "name": "A",
+    "children": [
+      { "name": "B", "value": 25 },
+
+      { "name": "G", "value": 12 },
+      {
+        "name": "H",
+        "children": [
+          { "name": "I", "value": 30 },
+          { "name": "J", "value": 10 }
+        ]
+      },
+      { "name": "K", "value": 50 },
+      {
+        "name": "C",
+        "children": [
+          { "name": "D", "value": 10 },
+          { "name": "E", "value": 105 },
+          { "name": "F", "value": 10 },
+          { "name": "G", "value": 20 }
+        ]
+      },
+    ]
+  };
+
+  let svg = d3.select("#treemap_div")
+  .select("svg")
+    .attr("viewBox", "0 0 " + width  + " " + height)
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("class", "voronoi_example");
+
+  // Give the data to this cluster layout:
+  let root = d3.hierarchy(data).sum(function(d){ return d.value});
+
+  // Then d3.treemap computes the position of each element of the hierarchy
+  let treemap = d3.treemap()
+    .size([width, height])
+    .paddingTop(28)
+    .paddingRight(7)
+    .paddingInner(3)
+    //.paddingOuter(6)
+
+  treemap(root)
+
+  let color = d3.scaleOrdinal()
+    .range([ "#402D54", "#D18975", "#8FD175"]);
+
+  let opacity = d3.scaleLinear()
+    .domain([10, 30])
+    .range([.5,1]);
+
+  svg
+    .selectAll("rect")
+    .data(root.leaves())
+    .enter()
+    .append("rect")
+      .attr('x', function (d) { return d.x0; })
+      .attr('y', function (d) { return d.y0; })
+      .attr('width', function (d) { return d.x1 - d.x0; })
+      .attr('height', function (d) { return d.y1 - d.y0; })
+      .style("stroke", "black")
+      .style("fill", function(d){ return color(d.parent.data.name)} )
+      .style("opacity", function(d){ return 1});
+
+  svg
+    .selectAll("text")
+    .data(root.leaves())
+    .enter()
+    .append("text")
+      .attr("x", function(d){ return d.x0+5})
+      .attr("y", function(d){ return d.y0+20})
+      .text(function(d){ return d.data.name })
+      .attr("font-size", "19px")
+      .attr("fill", "white");
+
+  svg
+    .selectAll("vals")
+    .data(root.leaves())
+    .enter()
+    .append("text")
+      .attr("x", function(d){ return d.x0+5})
+      .attr("y", function(d){ return d.y0+35})
+      .text(function(d){ return d.data.value })
+      .attr("font-size", "11px")
+      .attr("fill", "white");
+
+  svg
+    .selectAll("titles")
+    .data(root.descendants().filter(function(d){return d.depth==1}))
+    .enter()
+    .append("text")
+      .attr("x", function(d){ return d.x0})
+      .attr("y", function(d){ return d.y0+21})
+      .text(function(d){ return d.data.name })
+      .attr("font-size", "19px")
+      .attr("fill",  function(d){
+        return "gray"
+      })
+      .attr("opacity",  function(d){
+        return (d.children)? 1: 0;
+      });
+
+  </script>
+</html>
