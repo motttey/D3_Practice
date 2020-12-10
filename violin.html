@@ -36,9 +36,12 @@
     .then(function(data){
     console.log(data);
 
+    const minVal = d3.min(data, (d) => d["Sepal_Length"]);
+    const maxVal = d3.max(data, (d) => d["Sepal_Length"]);
+
     let y = d3.scaleLinear()
-      .domain([ 3.5, 8 ])
-      .range([height, margin.top]);
+      .domain([ minVal, maxVal ])
+      .range([ height, margin.bottom * 2 ]);
 
     let x = d3.scaleBand()
       .range([ 0, width ])
@@ -55,7 +58,7 @@
 
     let histogram = d3.histogram()
       .domain(y.domain())
-      .thresholds(y.ticks(10))
+      .thresholds(y.ticks(20))
       .value(d => d);
 
     let sumstat = d3.rollup(data,
@@ -95,7 +98,6 @@
             return(d[1])
           })
           .style("stroke", "none")
-          .style("fill","grey")
       .attr("d", d3.area()
           .x0( xNum(0) )
           .x1(function(d){
@@ -113,7 +115,7 @@
       .append("circle")
         .attr("cx", function(d){
           return(
-            x(d.Species) + x.bandwidth()/2 - Math.random() * jitterWidth
+            x(d["Species"]) + x.bandwidth()/2 - Math.random() * jitterWidth
           )})
         .attr("cy", function(d){return(y(d["Sepal_Length"]))})
         .attr("r", 5)
