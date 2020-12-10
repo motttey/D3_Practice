@@ -84,6 +84,35 @@
       .range([0, x.bandwidth()])
       .domain([-maxNum, maxNum])
 
+    svg.append("linearGradient")
+        .attr("id", "violinGradient")
+        .attr("x1", 0)
+        .attr("y1", "0%")
+        .attr("x2", 0)
+        .attr("y1", "100%")
+        .selectAll("stop")
+        .data([
+          {
+            offset: "0%",
+            color: "#dc143c"
+          },
+          {
+            offset: "50%",
+            color: "#faebd7"
+          },
+          {
+            offset: "100%",
+            color: "#1872cc"
+          }
+        ])
+        .enter().append("stop")
+        .attr("offset", function(d) {
+          return d.offset;
+        })
+        .attr("stop-color", function(d) {
+          return d.color;
+        });
+
     svg
       .selectAll("myViolin")
       .data(sumstat)
@@ -98,6 +127,7 @@
             return(d[1])
           })
           .style("stroke", "none")
+          .attr("fill", "url(#violinGradient)")
       .attr("d", d3.area()
           .x0( xNum(0) )
           .x1(function(d){
