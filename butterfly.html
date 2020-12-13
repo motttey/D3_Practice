@@ -12,7 +12,7 @@
       <svg id="polygon"></svg>
     </div>
   </body>
-  
+
   <script>
     const width = 800;
     const height = 600;
@@ -61,10 +61,12 @@
     // plot data points
     svg.append("g")
       .selectAll("circle")
-      .data(values)
+      .data(vertices)
       .enter().append("circle")
-      .attr("cx", function(d) { return xScale(d["x"]); })
-      .attr("cy", function(d) { return yScale(d["y"]); })
-      .attr("r", 2);
-
+      .attr("cx", function(d) { return d[0]; })
+      .attr("cy", function(d) { return d[1]; })
+      .attr("r", 2)
+      .style("fill", function(d){
+        return polygon.includes(d) ? "orange" : "#444";
+      });
 </script>
