@@ -76,25 +76,33 @@
 
       pairs.forEach(function(pair, i) {
         let candidate_area = pair.concat([centroid]);
-        let pair_polygon= d3.polygonHull(candidate_area);
-        let included = vertices.filter(d => d3.polygonContains(pair_polygon, d));
+        let included = vertices
+          .filter(d => !candidate_area.includes(d))
+          .filter(d => d3.polygonContains(candidate_area, d));
+
+        let each_candidate_points = [];
         included.forEach(function(point, _) {
           let point_tri = pair.concat([point]);
-          let cand_polygon= d3.polygonHull(point_tri);
+          let included_num = included
+            .filter(d => !point_tri.includes(d))
+            .filter(d => d3.polygonContains(point_tri, d)).length;
 
-          let included_num = vertices.filter(d => d3.polygonContains(point_tri, d)).length;
-
-          if (included_num === 0) {
-            new_polygon_point.push([point, i]);
-          }
+          if (included_num <= 1) each_candidate_points.push(point);
         });
+
+        let max_p = each_candidate_points.reduce((iMax, x, i, arr) => d3.polygonArea(pair.concat([x])) > d3.polygonArea(pair.concat([arr[iMax]])) ? i : iMax, 0);
+
+        new_polygon_point.push([each_candidate_points[max_p], i])
       });
 
+      // let sumstat = d3.groups(new_polygon_point, d => d[1]);
       console.log(boundary_points);
+
       let offset = 0;
-      new_polygon_point.forEach(function(d,i){
+      new_polygon_point.forEach(function(d){
+        console.log(d[1])
         boundary_points.splice(d[1] + offset, 0, d[0]);
-        // offset++;
+        offset++;
       });
       console.log(boundary_points);
 
@@ -107,4 +115,12 @@
         .attr("r", 2)
         .style("fill", "yellow");
 
+      svg.append("g")
+        .append("path")
+        .datum(boundary_points)
+        .attr("id", "convex_hull")
+        .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
+        .attr("fill", "cyan")
+        .attr("stroke", "steelblue")
+        .attr("opacity", "0.5");
 </script>
