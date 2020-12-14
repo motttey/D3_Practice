@@ -77,30 +77,35 @@
 
       pairs.forEach(function(pair, i) {
         let candidate_area = pair.concat([centroid]);
+
+        let centroid_i = d3.polygonCentroid(candidate_area);
+        let candidate_area_centroid = pair.concat([centroid_i]);
         let included = vertices
           .filter(d => !candidate_area.includes(d))
-          .filter(d => d3.polygonContains(candidate_area, d));
+          .filter(d => d3.polygonContains(candidate_area_centroid, d));
 
-        let each_candidate_points = [];
-        included.forEach(function(point, _) {
-          let point_tri = pair.concat([point]);
-          let included_num = included
-            .filter(d => !point_tri.includes(d))
-            .filter(d => d3.polygonContains(point_tri, d)).length;
+        if (included.length === 0) {
+          new_polygon_point.push([centroid_i, i]);
+        } else {
+          let each_candidate_points = [];
+          included.forEach(function(point, _) {
+            let point_tri = pair.concat([point]);
+            let included_num = included
+              .filter(d => !point_tri.includes(d))
+              .filter(d => d3.polygonContains(point_tri, d)).length;
 
-          if (included_num === 0) each_candidate_points.push(point);
-        });
+            if (included_num === 0) each_candidate_points.push(point);
+          });
 
-        let max_p = each_candidate_points.reduce((iMax, x, i, arr) => d3.polygonArea(pair.concat([x])) > d3.polygonArea(pair.concat([arr[iMax]])) ? i : iMax, 0);
-
-        new_polygon_point.push([each_candidate_points[max_p], i]);
+          let max_p = each_candidate_points.reduce((iMax, x, i, arr) => d3.polygonArea(pair.concat([x])) > d3.polygonArea(pair.concat([arr[iMax]])) ? i : iMax, 0);
+          new_polygon_point.push([each_candidate_points[max_p], i]);
+        }
       });
 
       // let sumstat = d3.groups(new_polygon_point, d => d[1]);
       // 最も近い中間点とのcentroidまで狭める見つける?
       let offset = 0;
       new_polygon_point.forEach(function(d){
-        console.log(d[1])
         polygon.splice(d[1] + offset, 0, d[0]);
         offset++;
       });
