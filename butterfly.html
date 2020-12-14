@@ -70,8 +70,9 @@
         return polygon.includes(d) ? "orange" : "#444";
       });
 
-      let boundary_points = vertices.filter(d => polygon.includes(d));
-      let pairs = d3.pairs(boundary_points);
+      polygon.push(polygon[0]);
+
+      let pairs = d3.pairs(polygon);
       let new_polygon_point = [];
 
       pairs.forEach(function(pair, i) {
@@ -87,28 +88,26 @@
             .filter(d => !point_tri.includes(d))
             .filter(d => d3.polygonContains(point_tri, d)).length;
 
-          if (included_num <= 1) each_candidate_points.push(point);
+          if (included_num === 0) each_candidate_points.push(point);
         });
 
         let max_p = each_candidate_points.reduce((iMax, x, i, arr) => d3.polygonArea(pair.concat([x])) > d3.polygonArea(pair.concat([arr[iMax]])) ? i : iMax, 0);
 
-        new_polygon_point.push([each_candidate_points[max_p], i])
+        new_polygon_point.push([each_candidate_points[max_p], i]);
       });
 
       // let sumstat = d3.groups(new_polygon_point, d => d[1]);
-      console.log(boundary_points);
-
+      // 最も近い中間点とのcentroidまで狭める見つける?
       let offset = 0;
       new_polygon_point.forEach(function(d){
         console.log(d[1])
-        boundary_points.splice(d[1] + offset, 0, d[0]);
+        polygon.splice(d[1] + offset, 0, d[0]);
         offset++;
       });
-      console.log(boundary_points);
 
       svg.append("g")
         .selectAll("circle")
-        .data(boundary_points)
+        .data(polygon)
         .enter().append("circle")
         .attr("cx", function(d) { return d[0]; })
         .attr("cy", function(d) { return d[1]; })
@@ -117,7 +116,7 @@
 
       svg.append("g")
         .append("path")
-        .datum(boundary_points)
+        .datum(polygon)
         .attr("id", "convex_hull")
         .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
         .attr("fill", "cyan")
