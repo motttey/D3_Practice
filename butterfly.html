@@ -75,10 +75,29 @@
       let pairs = d3.pairs(polygon);
       let new_polygon_point = [];
 
-      pairs.forEach(function(pair, i) {
+      function defineBoundaryPoint(pair, vertices, centroid) {
         let candidate_area = pair.concat([centroid]);
 
+        let included = vertices
+          .filter(d => !candidate_area.includes(d))
+          .filter(d => d3.polygonContains(candidate_area, d));
+
+        if (included.length === 0) {
+          console.log(centroid);
+          return centroid;
+        }
+        else return defineBoundaryPoint(pair, vertices, d3.polygonCentroid(candidate_area));
+      };
+
+      pairs.forEach(function(pair, i) {
+        let candidate_area = pair.concat([centroid]);
         let centroid_i = d3.polygonCentroid(candidate_area);
+        let candidate_point = defineBoundaryPoint(pair, vertices, centroid_i);
+        console.log(candidate_point);
+
+        new_polygon_point.push([candidate_point, i]);
+
+        /*
         let candidate_area_centroid = pair.concat([centroid_i]);
         let included = vertices
           .filter(d => !candidate_area.includes(d))
@@ -100,11 +119,13 @@
           let max_p = each_candidate_points.reduce((iMax, x, i, arr) => d3.polygonArea(pair.concat([x])) > d3.polygonArea(pair.concat([arr[iMax]])) ? i : iMax, 0);
           new_polygon_point.push([each_candidate_points[max_p], i]);
         }
+        */
       });
 
-      // let sumstat = d3.groups(new_polygon_point, d => d[1]);
+      console.log(new_polygon_point);
+
       // 最も近い中間点とのcentroidまで狭める見つける?
-      let offset = 0;
+      let offset = 1;
       new_polygon_point.forEach(function(d){
         polygon.splice(d[1] + offset, 0, d[0]);
         offset++;
@@ -121,7 +142,7 @@
 
       svg.append("g")
         .append("path")
-        .datum(polygon)
+        .datum(line(polygon))
         .attr("id", "convex_hull")
         .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
         .attr("fill", "cyan")
