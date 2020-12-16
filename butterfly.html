@@ -140,12 +140,18 @@
         .attr("r", 2)
         .style("fill", "yellow");
 
+      let line = d3.line()
+          .curve (d3.curveCatmullRomClosed)
+          .x (function(d) { return d[0]; })
+          .y (function(d) { return d[1]; });
+
       svg.append("g")
         .append("path")
-        .datum(line(polygon))
+        // .datum(polygon)
         .attr("id", "convex_hull")
-        .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
-        .attr("fill", "cyan")
-        .attr("stroke", "steelblue")
+        .attr("d", line(polygon))
+        // .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
+        .attr("fill", "darkred")
+        .attr("stroke", "red")
         .attr("opacity", "0.5");
 </script>
