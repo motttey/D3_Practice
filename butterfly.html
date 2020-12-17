@@ -46,7 +46,7 @@
       .datum(polygon)
       .attr("id", "convex_hull")
       .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
-      .attr("fill", "cyan")
+      .attr("fill", "none")
       .attr("stroke", "steelblue")
       .attr("opacity", "0.5");
 
@@ -70,88 +70,65 @@
         return polygon.includes(d) ? "orange" : "#444";
       });
 
+
+    function defineBoundaryPoint(pair, vertices, centroid) {
+      let candidate_area = pair.concat([centroid]);
+
+      let included = vertices
+        .filter(d => !candidate_area.includes(d))
+        .filter(d => d3.polygonContains(candidate_area, d));
+
+      if (included.length === 0) return centroid;
+      else return defineBoundaryPoint(pair, vertices, d3.polygonCentroid(candidate_area));
+    };
+
+    const max = 2;
+    function definePolygonPoints(polygon, recursive_depth) {
       polygon.push(polygon[0]);
 
       let pairs = d3.pairs(polygon);
       let new_polygon_point = [];
-
-      function defineBoundaryPoint(pair, vertices, centroid) {
-        let candidate_area = pair.concat([centroid]);
-
-        let included = vertices
-          .filter(d => !candidate_area.includes(d))
-          .filter(d => d3.polygonContains(candidate_area, d));
-
-        if (included.length === 0) {
-          console.log(centroid);
-          return centroid;
-        }
-        else return defineBoundaryPoint(pair, vertices, d3.polygonCentroid(candidate_area));
-      };
-
       pairs.forEach(function(pair, i) {
         let candidate_area = pair.concat([centroid]);
-        let centroid_i = d3.polygonCentroid(candidate_area);
-        let candidate_point = defineBoundaryPoint(pair, vertices, centroid_i);
-        console.log(candidate_point);
-
+        let candidate_point = defineBoundaryPoint(pair, vertices, d3.polygonCentroid(candidate_area));
         new_polygon_point.push([candidate_point, i]);
-
-        /*
-        let candidate_area_centroid = pair.concat([centroid_i]);
-        let included = vertices
-          .filter(d => !candidate_area.includes(d))
-          .filter(d => d3.polygonContains(candidate_area_centroid, d));
-
-        if (included.length === 0) {
-          new_polygon_point.push([centroid_i, i]);
-        } else {
-          let each_candidate_points = [];
-          included.forEach(function(point, _) {
-            let point_tri = pair.concat([point]);
-            let included_num = included
-              .filter(d => !point_tri.includes(d))
-              .filter(d => d3.polygonContains(point_tri, d)).length;
-
-            if (included_num === 0) each_candidate_points.push(point);
-          });
-
-          let max_p = each_candidate_points.reduce((iMax, x, i, arr) => d3.polygonArea(pair.concat([x])) > d3.polygonArea(pair.concat([arr[iMax]])) ? i : iMax, 0);
-          new_polygon_point.push([each_candidate_points[max_p], i]);
-        }
-        */
       });
 
       console.log(new_polygon_point);
 
       // 最も近い中間点とのcentroidまで狭める見つける?
-      let offset = 1;
-      new_polygon_point.forEach(function(d){
-        polygon.splice(d[1] + offset, 0, d[0]);
-        offset++;
+      new_polygon_point.forEach(function(d, i){
+        polygon.splice(d[1] + (i+1), 0, d[0]);
       });
 
-      svg.append("g")
-        .selectAll("circle")
-        .data(polygon)
-        .enter().append("circle")
-        .attr("cx", function(d) { return d[0]; })
-        .attr("cy", function(d) { return d[1]; })
-        .attr("r", 2)
-        .style("fill", "yellow");
+      console.log(recursive_depth);
+      if (recursive_depth > max) return polygon;
+      else definePolygonPoints(polygon, recursive_depth + 1);
+    }
 
-      let line = d3.line()
-          .curve (d3.curveCatmullRomClosed)
-          .x (function(d) { return d[0]; })
-          .y (function(d) { return d[1]; });
+    let new_polygon = definePolygonPoints(polygon, 1);
 
-      svg.append("g")
-        .append("path")
-        // .datum(polygon)
-        .attr("id", "convex_hull")
-        .attr("d", line(polygon))
-        // .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
-        .attr("fill", "darkred")
-        .attr("stroke", "red")
-        .attr("opacity", "0.5");
+    svg.append("g")
+      .selectAll("circle")
+      .data(polygon)
+      .enter().append("circle")
+      .attr("cx", function(d) { return d[0]; })
+      .attr("cy", function(d) { return d[1]; })
+      .attr("r", 2)
+      .style("fill", "yellow");
+
+    let line = d3.line()
+        .curve (d3.curveCatmullRomClosed)
+        .x (function(d) { return d[0]; })
+        .y (function(d) { return d[1]; });
+
+    svg.append("g")
+      .append("path")
+      // .datum(polygon)
+      .attr("id", "convex_hull")
+      .attr("d", line(polygon))
+      // .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
+      .attr("fill", "darkred")
+      .attr("stroke", "red")
+      .attr("opacity", "0.5");
 </script>
