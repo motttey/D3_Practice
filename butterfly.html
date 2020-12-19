@@ -4,10 +4,10 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="js/contour.js"></script>
     <meta charset="utf-8"/>
-    <title>D3 Convex Hull</title>
+    <title>D3 Space-Reduced Convex Hull</title>
   </head>
   <body>
-    <h1>D3 Convex Hull</h1>
+    <h1>D3 Space-Reduced Convex Hull</h1>
     <div id="polygon_div">
       <svg id="polygon"></svg>
     </div>
@@ -86,22 +86,13 @@
     function definePolygonPoints(polygon, recursive_depth) {
       polygon.push(polygon[0]);
 
-      let pairs = d3.pairs(polygon);
-      let new_polygon_point = [];
-      pairs.forEach(function(pair, i) {
-        let candidate_area = pair.concat([centroid]);
-        let candidate_point = defineBoundaryPoint(pair, vertices, d3.polygonCentroid(candidate_area));
-        new_polygon_point.push([candidate_point, i]);
-      });
+      d3.pairs(polygon)
+        .map((pair, i) => defineBoundaryPoint(pair, vertices,     d3.polygonCentroid(pair.concat([centroid]))))
+        .map((point, i) => [point, i])
+        .forEach((d, i) => {
+          polygon.splice(d[1] + (i+1), 0, d[0]);
+        });
 
-      console.log(new_polygon_point);
-
-      // 最も近い中間点とのcentroidまで狭める見つける?
-      new_polygon_point.forEach(function(d, i){
-        polygon.splice(d[1] + (i+1), 0, d[0]);
-      });
-
-      console.log(recursive_depth);
       if (recursive_depth > max) return polygon;
       else definePolygonPoints(polygon, recursive_depth + 1);
     }
