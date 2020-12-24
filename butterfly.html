@@ -16,6 +16,7 @@
   <script>
     const width = 800;
     const height = 600;
+    const recursive_max = 2;
 
     // sample size
     const n = 100;
@@ -70,7 +71,6 @@
         return polygon.includes(d) ? "orange" : "#444";
       });
 
-
     function defineBoundaryPoint(pair, vertices, centroid) {
       let candidate_area = pair.concat([centroid]);
 
@@ -82,7 +82,6 @@
       else return defineBoundaryPoint(pair, vertices, d3.polygonCentroid(candidate_area));
     };
 
-    const max = 2;
     function definePolygonPoints(polygon, recursive_depth) {
       polygon.push(polygon[0]);
 
@@ -93,21 +92,11 @@
           polygon.splice(d[1] + (i+1), 0, d[0]);
         });
 
-      if (recursive_depth > max) return polygon;
+      if (recursive_depth > recursive_max) return polygon;
       else definePolygonPoints(polygon, recursive_depth + 1);
     }
 
     let new_polygon = definePolygonPoints(polygon, 1);
-
-    svg.append("g")
-      .selectAll("circle")
-      .data(polygon)
-      .enter().append("circle")
-      .attr("cx", function(d) { return d[0]; })
-      .attr("cy", function(d) { return d[1]; })
-      .attr("r", 2)
-      .style("fill", "yellow");
-
     let line = d3.line()
         .curve (d3.curveCatmullRomClosed)
         .x (function(d) { return d[0]; })
@@ -115,11 +104,10 @@
 
     svg.append("g")
       .append("path")
-      // .datum(polygon)
       .attr("id", "convex_hull")
       .attr("d", line(polygon))
-      // .attr("d", function(d) { return "M" + d.join("L") + "Z"; })
       .attr("fill", "darkred")
       .attr("stroke", "red")
       .attr("opacity", "0.5");
+      
 </script>
