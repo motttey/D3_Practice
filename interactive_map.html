@@ -6,7 +6,6 @@
     <title>D3 Interactive Map</title>
   </head>
   <body>
-    <h1>D3 Interactive Map</h1>
     <div id="map_div">
       <svg id="map"></svg>
     </div>
@@ -28,12 +27,12 @@
   </style>
 
   <script>
-    const width = 800;
+    const width = 900;
     const height = 600;
     const bar_height = 400;
 
-    const centerPos = [137.0, 38.2]; // 地図のセンター位置
-    const scale = 1500; // 地図のスケール
+    const centerPos = [137.0, 36.0]; // 地図のセンター位置
+    const scale = 1300; // 地図のスケール
 
     // 地図の投影設定
     const projection = d3
@@ -49,17 +48,15 @@
     const svg = d3
       .select("#map_div")
       .select("svg")
-      .attr("viewBox", "0 0 " + width  + " " + height)
-      .attr("width", "100%")
-      .attr("height", "100%")
+      .attr("width", width)
+      .attr("height", height)
       .attr("class", "map");
 
     const svg_bar = d3
       .select("#bar_chart_div")
       .select("svg")
-      .attr("viewBox", "0 0 " + width  + " " + bar_height)
-      .attr("width", "100%")
-      .attr("height", "100%")
+      .attr("width", width)
+      .attr("height", height)
       .attr("class", "bar_chart");
 
     let render_line = d3.line().x(function(d) {
@@ -69,39 +66,38 @@
       });
 
     let active_line = null;
-    let lines_layer =
-      svg.call(d3.drag()
-        .on("start", (event) => {
-          activeLine = svg.append("path").datum([]).attr("class", "line");
-          activeLine.datum().push(d3.pointers(event)[0]);
-        })
-        .on("drag", (event) => {
-          activeLine.datum().push(d3.pointers(event)[0]);
-          activeLine.attr("d", render_line);
-        })
-        .on("end", (event) => {
-          let selectedPref = [];
-          let filterdJson = [];
+    svg.call(d3.drag()
+      .on("start", (event) => {
+        activeLine = svg.append("path").datum([]).attr("class", "line");
+        activeLine.datum().push(d3.pointers(event)[0]);
+      })
+      .on("drag", (event) => {
+        activeLine.datum().push(d3.pointers(event)[0]);
+        activeLine.attr("d", render_line);
+      })
+      .on("end", (event) => {
+        let selectedPref = [];
+        let filterdJson = [];
 
-          d3.selectAll(".pref")
-            .each(function(d, i){
-              let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
-              if (isClossed) {
-                filterdJson.push(d);
-                selectedPref.push(i);
-              }
-              // update chart
-              d3.select(this)
-                .style("stroke-width", function(){
-                  return (isClossed)? 1.0: 0.25;
-                })
-                .style("stroke", function(){
-                  return (isClossed)? "black": "gray";
-                });
-            });
-          if (filterdJson.length > 0) drawBarChart(filterdJson, selectedPref);
-          activeLine.remove();
-        }));
+        d3.selectAll(".pref")
+          .each(function(d, i){
+            let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
+            if (isClossed) {
+              filterdJson.push(d);
+              selectedPref.push(i);
+            }
+            // update chart
+            d3.select(this)
+              .style("stroke-width", function(){
+                return (isClossed)? 1.0: 0.25;
+              })
+              .style("stroke", function(){
+                return (isClossed)? "black": "gray";
+              });
+          });
+        if (filterdJson.length > 0) drawBarChart(filterdJson, selectedPref);
+        activeLine.remove();
+      }));
 
     const data = Array.from(Array(47), (v, k) => Math.random(1));
     const margin = 50;
