@@ -69,45 +69,23 @@
       });
 
     let active_line = null;
-    svg.call(d3.drag()
-      .on("start", (event) => {
-        activeLine = svg.append("path").datum([]).attr("class", "line");
-        activeLine.datum().push(d3.pointers(event)[0]);
-      })
-      .on("drag", (event) => {
-        activeLine.datum().push(d3.pointers(event)[0]);
-        activeLine.attr("d", render_line);
-      })
-      .on("end", (event) => {
-        let selectedPref = [];
-        let filterdJson = [];
-
-        d3.selectAll(".pref")
-          .each(function(d, i){
-            let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
-            if (isClossed) {
-              filterdJson.push(d);
-              selectedPref.push(i);
-            }
-            // update chart
-            d3.select(this)
-              .style("stroke-width", function(){
-                return (isClossed)? 1.0: 0.25;
-              })
-              .style("stroke", function(){
-                return (isClossed)? "aquamarine": "gray";
-              });
-          });
-        if (filterdJson.length > 0) drawBarChart(filterdJson, selectedPref);
-        activeLine.remove();
-      }));
-
     let xScale = d3.scaleBand().rangeRound([margin, width - margin]).padding(0.1);
-    let yScale = d3.scaleLinear().rangeRound([bar_height - margin, 0]);
+    let yScale = d3.scalePow()
+      .domain([10, 100000])
+      .rangeRound([bar_height - margin, 0]);
 
-    d3.json("json/japan.geojson").then(function(json) {
+    setUpData();
+
+    async function setUpData() {
+      const map = await d3.json("https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson");
+      map.features.sort((a, b) => a.properties.id - b.properties.id);
+
+      const covid_data = await d3.json("https://raw.githubusercontent.com/kaz-ogiwara/covid19/master/data/data.json");
+      const covid_pref =  covid_data["prefectures-map"].map(d => d.value);
+      console.log(map);
+
       svg.selectAll("path")
-        .data(json.features)
+        .data(map.features)
         .enter()
         .append("path")
         .attr("d", path)
@@ -115,13 +93,13 @@
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
         .style("fill", function(d,i){
-          return d3.interpolateRdBu(data[i]/d3.max(data));
+          return d3.interpolateRdBu(covid_pref[i]/d3.max(covid_pref));
         });
 
-      xScale.domain(json.features.map(function(d) {
-        return d.properties.pref_j;
+      xScale.domain(map.features.map(function(d) {
+        return d.properties.nam_ja;
       }));
-      yScale.domain([0, d3.max(data)]);
+      yScale.domain([0, d3.max(covid_pref)]);
 
       svg_bar.append("g")
           .attr("class", "axis axis--x")
@@ -138,8 +116,41 @@
           .attr("transform", "translate(" + margin + "," + 0 + ")")
           .call(d3.axisLeft(yScale));
 
-      drawBarChart(json.features, Array.from(Array(47), (v, k) => k ));
-    });
+      drawBarChart(map.features, Array.from(Array(47), (v, k) => k ), covid_pref);
+
+      svg.call(d3.drag()
+        .on("start", (event) => {
+          activeLine = svg.append("path").datum([]).attr("class", "line");
+          activeLine.datum().push(d3.pointers(event)[0]);
+        })
+        .on("drag", (event) => {
+          activeLine.datum().push(d3.pointers(event)[0]);
+          activeLine.attr("d", render_line);
+        })
+        .on("end", (event) => {
+          let selectedPref = [];
+          let filterdJson = [];
+
+          d3.selectAll(".pref")
+            .each(function(d, i){
+              let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
+              if (isClossed) {
+                filterdJson.push(d);
+                selectedPref.push(i);
+              }
+              // update chart
+              d3.select(this)
+                .style("stroke-width", function(){
+                  return (isClossed)? 1.0: 0.25;
+                })
+                .style("stroke", function(){
+                  return (isClossed)? "aquamarine": "gray";
+                });
+            });
+          if (filterdJson.length > 0) drawBarChart(filterdJson, selectedPref, covid_pref);
+          activeLine.remove();
+        }));
+    }
 
     function lineClossingPolygon(polygon, line){
       let retVal = false;
@@ -152,11 +163,11 @@
       return retVal;
     }
 
-    function drawBarChart(json, selectedPref){
+    function drawBarChart(json, selectedPref, data){
       console.log(json);
 
-      xScale.domain(json.map(d => d.properties.pref_j));
-      yScale.domain([0, d3.max(data)]);
+      xScale.domain(json.map(d => d.properties.nam_ja));
+      // yScale.domain([0, d3.max(data)]);
 
       svg_bar.select(".axis--x")
           .call(d3.axisBottom(xScale));
@@ -169,7 +180,7 @@
         .append("rect")
         .transition().duration(1000)
           .attr("class", "bar")
-          .attr("x", function(d) { return xScale(d.properties.pref_j); })
+          .attr("x", function(d) { return xScale(d.properties.nam_ja); })
           .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
           .attr("width", xScale.bandwidth())
           .attr("height", function(d, i) { return bar_height - yScale(data[selectedPref[i]]); })
@@ -179,7 +190,7 @@
 
       updatedBars
         .transition().duration(1000)
-          .attr("x", function(d) { return xScale(d.properties.pref_j); })
+          .attr("x", function(d) { return xScale(d.properties.nam_ja); })
           .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
           .attr("width", xScale.bandwidth())
           .attr("height", function(d, i) {
