@@ -133,7 +133,8 @@
 
           d3.selectAll(".pref")
             .each(function(d, i){
-              let isClossed = lineClossingPolygon(d.geometry.coordinates[0], activeLine);
+              let isClossed = d.geometry.coordinates.some((v) => lineClossingPolygon(v[0], activeLine));
+
               if (isClossed) {
                 filterdJson.push(d);
                 selectedPref.push(i);
