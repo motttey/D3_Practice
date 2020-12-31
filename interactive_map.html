@@ -70,8 +70,7 @@
 
     let active_line = null;
     let xScale = d3.scaleBand().rangeRound([margin, width - margin]).padding(0.1);
-    let yScale = d3.scalePow()
-      .domain([10, 100000])
+    let yScale = d3.scaleLinear()
       .rangeRound([bar_height - margin, 0]);
 
     setUpData();
@@ -82,7 +81,7 @@
 
       const covid_data = await d3.json("https://raw.githubusercontent.com/kaz-ogiwara/covid19/master/data/data.json");
       const covid_pref =  covid_data["prefectures-map"].map(d => d.value);
-      console.log(map);
+      console.log(covid_pref);
 
       svg.selectAll("path")
         .data(map.features)
@@ -93,7 +92,7 @@
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
         .style("fill", function(d,i){
-          return d3.interpolateRdBu(covid_pref[i]/d3.max(covid_pref));
+          return getColor(covid_pref[i], covid_pref);
         });
 
       xScale.domain(map.features.map(function(d) {
@@ -164,14 +163,21 @@
       return retVal;
     }
 
+    function getColor(target, data) {
+      return d3.interpolateRdBu(Math.log(target)/Math.log(d3.max(data)));
+    }
+
     function drawBarChart(json, selectedPref, data){
       console.log(json);
 
       xScale.domain(json.map(d => d.properties.nam_ja));
-      // yScale.domain([0, d3.max(data)]);
+      yScale.domain([0, d3.max(data.filter((d,i) => selectedPref.indexOf(i) > 0))]);
 
       svg_bar.select(".axis--x")
           .call(d3.axisBottom(xScale));
+
+      svg_bar.select(".axis--y")
+          .call(d3.axisLeft(yScale));
 
       let updatedBars = svg_bar.selectAll(".bar")
         .data(json);
@@ -182,11 +188,13 @@
         .transition().duration(1000)
           .attr("class", "bar")
           .attr("x", function(d) { return xScale(d.properties.nam_ja); })
-          .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
+          .attr("y", function(d, i) { return yScale(data[selectedPref[i]]); })
           .attr("width", xScale.bandwidth())
-          .attr("height", function(d, i) { return bar_height - yScale(data[selectedPref[i]]); })
+          .attr("height", function(d, i) {
+            return bar_height - margin -  yScale(data[selectedPref[i]]);
+          })
           .style("fill", function(d, i){
-            return d3.interpolateRdBu(data[selectedPref[i]]/d3.max(data));
+            return getColor(data[selectedPref[i]], data);
           });
 
       updatedBars
@@ -198,7 +206,7 @@
             return bar_height - yScale(data[selectedPref[i]]);
           })
           .style("fill", function(d, i){
-            return d3.interpolateRdBu(data[selectedPref[i]]/d3.max(data));
+            return getColor(data[selectedPref[i]], data);
           });
 
       updatedBars
