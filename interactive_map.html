@@ -15,7 +15,6 @@
   </body>
 
   <style>
-
   .line {
     fill: none;
     stroke: #000;
@@ -36,6 +35,7 @@
 
     const data = Array.from(Array(47), (v, k) => Math.random(1));
     const margin = 50;
+    const duration = 1000;
 
     // 地図の投影設定
     const projection = d3
@@ -62,14 +62,17 @@
       .attr("height", height)
       .attr("class", "bar_chart");
 
-    let render_line = d3.line().x(function(d) {
+    let render_line = d3.line()
+      .x(function(d) {
         return d[0];
-      }).y(function(d) {
+      })
+      .y(function(d) {
         return d[1];
       });
 
     let active_line = null;
-    let xScale = d3.scaleBand().rangeRound([margin, width - margin]).padding(0.1);
+    let xScale = d3.scaleBand()
+      .rangeRound([margin, width - margin]).padding(0.1);
     let yScale = d3.scaleLinear()
       .rangeRound([bar_height - margin, 0]);
 
@@ -81,7 +84,6 @@
 
       const covid_data = await d3.json("https://raw.githubusercontent.com/kaz-ogiwara/covid19/master/data/data.json");
       const covid_pref =  covid_data["prefectures-map"].map(d => d.value);
-      console.log(covid_pref);
 
       svg.selectAll("path")
         .data(map.features)
@@ -157,7 +159,6 @@
       activeLine.datum().forEach((segment, i) => {
         if (d3.polygonContains(polygon, projection.invert(segment))) {
           retVal = true;
-          return;
         }
       });
       return retVal;
@@ -168,10 +169,10 @@
     }
 
     function drawBarChart(json, selectedPref, data){
-      console.log(json);
-
       xScale.domain(json.map(d => d.properties.nam_ja));
-      yScale.domain([0, d3.max(data.filter((d,i) => selectedPref.indexOf(i) > 0))]);
+      yScale.domain([0, d3.max(
+        data.filter((d,i) => selectedPref.indexOf(i) >= 0))
+      ]);
 
       svg_bar.select(".axis--x")
           .call(d3.axisBottom(xScale));
@@ -185,10 +186,15 @@
       updatedBars
         .enter()
         .append("rect")
-        .transition().duration(1000)
+        .transition().duration(duration)
           .attr("class", "bar")
-          .attr("x", function(d) { return xScale(d.properties.nam_ja); })
-          .attr("y", function(d, i) { return yScale(data[selectedPref[i]]); })
+          .attr("x", function(d) {
+            return xScale(d.properties.nam_ja);
+          })
+          .attr("y", function(d, i) {
+            console.log(data[selectedPref[i]]);
+            return yScale(data[selectedPref[i]]);
+          })
           .attr("width", xScale.bandwidth())
           .attr("height", function(d, i) {
             return bar_height - margin -  yScale(data[selectedPref[i]]);
@@ -198,9 +204,11 @@
           });
 
       updatedBars
-        .transition().duration(1000)
+        .transition().duration(duration)
           .attr("x", function(d) { return xScale(d.properties.nam_ja); })
-          .attr("y", function(d, i) { return yScale(data[selectedPref[i]]) - margin; })
+          .attr("y", function(d, i) {
+            return yScale(data[selectedPref[i]]) - margin;
+          })
           .attr("width", xScale.bandwidth())
           .attr("height", function(d, i) {
             return bar_height - yScale(data[selectedPref[i]]);
