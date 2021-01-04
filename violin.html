@@ -46,7 +46,7 @@
     .attr("height", height + margin.top + margin.bottom)
     .attr("transform", "translate(" + margin.left + ", " + margin.bottom + ")")
     .attr("class", "violin");
-    
+
   let yScale = d3.scaleLinear()
     .domain([ minVal, maxVal ])
     .range([ height, margin.bottom]);
@@ -77,12 +77,9 @@
       d => d["label"]
     );
 
-  let maxNum = 0;
-  sumstat.forEach(function(value, key) {
-    lengths = value.map(function(a){return a["length"];})
-    longuest = d3.max(lengths);
-    if (longuest > maxNum) { maxNum = longuest }
-  });
+  const maxNum = Array.from(sumstat.values())
+    .map((value, key) => d3.max(value.map(d => d.length)))
+    .reduce((a, b) => a > b? a: b);
 
   let xNumScale = d3.scaleLinear()
     .range([xScale.bandwidth()/2, xScale.bandwidth()])
@@ -134,7 +131,7 @@
     .attr("d", d3.area()
       .x0( xNumScale(0) )
       .x1(function(d){
-        return(xNumScale(d.length))
+        return(xNumScale(d.length));
       })
       .y(function(d){ return(yScale(d.x0)) } )
       .curve(d3.curveCatmullRom)
