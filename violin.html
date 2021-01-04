@@ -30,129 +30,137 @@
     .attr("transform", "translate(" + margin.left + ", " + margin.bottom + ")")
     .attr("class", "violin");
 
+  // sample size
+  const n = 200;
+  const labels = ["A", "B", "C", "D"]
+  let data = new Array(n);
+  for(let i = 0; i < n; i++) {
+    data[i] = {
+      "value": d3.randomNormal(2, 5)(),
+      "label": labels[Math.floor(Math.random() * labels.length)]
+    };
+  }
+
+  console.log(data);
   // https://www.d3-graph-gallery.com/graph/violin_jitter.html
 
-  d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv")
-    .then(function(data){
+  const minVal = d3.min(data, (d) => d["value"]);
+  const maxVal = d3.max(data, (d) => d["value"]);
+  const meanVal = d3.mean(data, (d) => d["value"]);
+  const jitterWidth = 50;
 
-    const minVal = d3.min(data, (d) => d["Sepal_Length"]);
-    const maxVal = d3.max(data, (d) => d["Sepal_Length"]);
-    const meanVal = d3.mean(data, (d) => d["Sepal_Length"]);
+  let yScale = d3.scaleLinear()
+    .domain([ minVal, maxVal ])
+    .range([ height, margin.bottom]);
 
-    let y = d3.scaleLinear()
-      .domain([ minVal - 1, maxVal ])
-      .range([ height, margin.bottom * 2 ]);
+  console.log(minVal);
 
-    let x = d3.scaleBand()
-      .range([ 0, width ])
-      .domain(["setosa", "versicolor", "virginica"])
-      .padding(0.05);
+  let xScale = d3.scaleBand()
+    .range([ 0, width ])
+    .domain(labels)
+    .padding(0.05);
 
-    svg.append("g")
-      .attr("transform", "translate(0," + (height - margin.bottom) + ")")
-      .call(d3.axisBottom(x))
+  svg.append("g")
+    .attr("transform", "translate(0," + (height) + ")")
+    .call(d3.axisBottom(xScale));
 
-    svg.append("g")
-      .attr("transform", "translate(25," + -margin.bottom + ")")
-      .call(d3.axisLeft(y));
+  svg.append("g")
+    .attr("transform", "translate(25," + 0 + ")")
+    .call(d3.axisLeft(yScale));
 
-    let histogram = d3.histogram()
-      .domain(y.domain())
-      .thresholds(y.ticks(20))
-      .value(d => d);
+  let histogram = d3.histogram()
+    .domain(yScale.domain())
+    .thresholds(yScale.ticks(20))
+    .value(d => d);
 
-    let sumstat = d3.rollup(data,
-        v => {
-          let input = v.map(g => g["Sepal_Length"]);
-          return histogram(input);
+  let sumstat = d3.rollup(data,
+      v => {
+        let input = v.map(g => g["value"]);
+        return histogram(input);
+      },
+      d => d["label"]
+    );
+
+  let maxNum = 0
+  sumstat.forEach(function(value, key) {
+    lengths = value.map(function(a){return a["length"];})
+    longuest = d3.max(lengths);
+    if (longuest > maxNum) { maxNum = longuest }
+  })
+
+  let xNum = d3.scaleLinear()
+    .range([0, xScale.bandwidth()])
+    .domain([minVal, maxNum])
+
+  svg.append("linearGradient")
+      .attr("id", "violinGradient")
+      .attr("x1", 0)
+      .attr("y1", "0%")
+      .attr("x2", 0)
+      .attr("y1", "100%")
+      .selectAll("stop")
+      .data([
+        {
+          offset: "0%",
+          color: "#dc143c"
         },
-        d => d["Species"]
-      );
+        {
+          offset: 1 - (maxVal - meanVal)/ (maxVal - minVal),
+          color: "#faebd7"
+        },
+        {
+          offset: "100%",
+          color: "#1872cc"
+        }
+      ])
+      .enter().append("stop")
+      .attr("offset", function(d) {
+        return d.offset;
+      })
+      .attr("stop-color", function(d) {
+        return d.color;
+      });
 
-    console.log(sumstat);
-
-    let maxNum = 0
-    sumstat.forEach(function(value, key) {
-      lengths = value.map(function(a){return a["length"];})
-      longuest = d3.max(lengths)
-      if (longuest > maxNum) { maxNum = longuest }
-    })
-
-    console.log(maxNum);
-
-    let xNum = d3.scaleLinear()
-      .range([0, x.bandwidth()])
-      .domain([-maxNum, maxNum])
-
-    svg.append("linearGradient")
-        .attr("id", "violinGradient")
-        .attr("x1", 0)
-        .attr("y1", "0%")
-        .attr("x2", 0)
-        .attr("y1", "100%")
-        .selectAll("stop")
-        .data([
-          {
-            offset: "0%",
-            color: "#dc143c"
-          },
-          {
-            offset: 1 - minVal/meanVal,
-            color: "#faebd7"
-          },
-          {
-            offset: "100%",
-            color: "#1872cc"
-          }
-        ])
-        .enter().append("stop")
-        .attr("offset", function(d) {
-          return d.offset;
+  svg
+    .selectAll("violinBands")
+    .data(sumstat)
+    .enter()
+    .append("g")
+      .attr("transform", function(d){
+        return("translate(" + (xScale(d[0]) ) + ", " + 0 + ")")
+      })
+    .append("path")
+        .datum(function(d){
+          return(d[1])
         })
-        .attr("stop-color", function(d) {
-          return d.color;
-        });
-
-    svg
-      .selectAll("myViolin")
-      .data(sumstat)
-      .enter()
-      .append("g")
-        .attr("transform", function(d){
-          console.log(d);
-          return("translate(" + (x(d[0]) ) + ", " + -1 *  margin.bottom + ")")
+        .style("stroke", "none")
+        .attr("fill", "url(#violinGradient)")
+    .attr("d", d3.area()
+        .x0( xNum(0) )
+        .x1(function(d){
+          return(xNum(d.length))
         })
-      .append("path")
-          .datum(function(d){
-            return(d[1])
-          })
-          .style("stroke", "none")
-          .attr("fill", "url(#violinGradient)")
-      .attr("d", d3.area()
-          .x0( xNum(0) )
-          .x1(function(d){
-            return(xNum(d.length))
-          } )
-          .y(function(d){ return(y(d.x0)) } )
-          .curve(d3.curveCatmullRom)
-         );
+        .y(function(d){ return(yScale(d.x0)) } )
+        .curve(d3.curveCatmullRom)
+       );
 
-    const jitterWidth = 50
-    svg
-      .selectAll("indPoints")
-      .data(data)
-      .enter()
-      .append("circle")
-        .attr("cx", function(d){
-          return(
-            x(d["Species"]) + x.bandwidth()/2 - Math.random() * jitterWidth
-          )})
-        .attr("cy", function(d){return(y(d["Sepal_Length"]))})
-        .attr("r", 5)
-        .style("fill", function(d){
-          return(d3.interpolateRdBu(parseInt(d["Sepal_Length"],10)/maxVal))})
-        .attr("stroke", "white")
-
-  });
+  svg
+    .selectAll("violinPoints")
+    .data(data)
+    .enter()
+    .append("circle")
+      .attr("cx", function(d){
+        return(
+          xScale(d["label"]) + xScale.bandwidth() / 2 - Math.random() * jitterWidth
+        )})
+      .attr("cy", function(d){
+        return yScale(d["value"]);
+      })
+      .attr("r", 5)
+      .style("fill", function(d){
+        return (d3.interpolateRdBu( 1 -
+          (maxVal - parseInt(d["value"],10)) / (maxVal - minVal)
+        ))})
+      .attr("stroke", "white")
 
 </script>
