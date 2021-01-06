@@ -44,18 +44,18 @@
 
   let xScale = d3.scaleLinear()
     .domain([ 0, valXMax ])
-    .range([ height, margin.bottom]);
+    .range([ margin.left, width ]);
 
   let yScale = d3.scaleLinear()
     .domain([ 0, valYMax ])
-    .range([ 0, width ]);
+    .range([ height, 0]);
 
   svg.append("g")
-    .attr("transform", "translate(30," + (height) + ")")
+    .attr("transform", "translate(0," + (height) + ")")
     .call(d3.axisBottom(xScale));
 
   svg.append("g")
-    .attr("transform", "translate(" + 30 + "," + 0 + ")")
+    .attr("transform", "translate(" + margin.left + "," + 0 + ")")
     .call(d3.axisLeft(yScale));
 
   svg.append("g")
@@ -79,6 +79,7 @@
     .size([width, height])
     .cellSize(40)
     .bandwidth(10)
+    .thresholds(10);
 
   let contourDensityValues = contourDensity(data);
   console.log(contourDensityValues);
@@ -90,7 +91,16 @@
 
   let polygon_vertices = d3.select("#convex_hull").data()[0];
 
+  const interpolate = d3.line()
+    .x((d) => parseFloat(d[0]))
+    .y((d) => parseFloat(d[1]))
+    .curve(d3.curveCatmullRomClosed);
+
   // overlap contour on convex hull
+  contourDensityValues.forEach((contourDensityValue, i) => {
+    console.log(contourDensityValue);
+  });
+
   svg.insert("g")
     .attr("stroke", "none")
     .attr("stroke-width", "0.0")
@@ -99,6 +109,12 @@
     .enter()
     .append("path")
     .attr("fill", function(d) { return color(d.value); })
-    .attr("d", d3.geoPath())
-    .attr("opacity", "0.1");
+    .attr("d", (d) => {
+      return interpolate(d3.geoPath()(d)
+        .replace(/M|Z/, "")
+        .split("L")
+        .map((d) => d.split(","))
+      );
+    })
+    .attr("opacity", "0.3");
 </script>
