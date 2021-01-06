@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Violin</title>
+  </head>
+  <body>
+    <h1>D3 Violin</h1>
+    <div id="violin_div">
+      <svg id="violin"></svg>
+    </div>
+  </body>
+</html>
+
+<style>
+</style>
+
+<script>
+  const width = 800;
+  const height = 800;
+  const margin = {top: 50, right: 50, bottom: 50, left: 50};
+
+  // SVG要素を追加
+  const svg = d3
+    .select("#violin_div")
+    .select("svg")
+    .attr("width", width + margin.right + margin.left)
+    .attr("height", height + margin.top + margin.bottom)
+    .attr("transform", "translate(" + margin.left + ", " + margin.bottom + ")")
+    .attr("class", "violin");
+
+  const n = 1000;
+  let data = new Array(n);
+  for (let i = 0; i < n; i++) {
+    data[i] = {
+      "x": d3.randomNormal(100, 50)(),
+      "y": d3.randomNormal(100, 20)(),
+    };
+  }
+
+  const valXMax = d3.max(data.map((d) => d["x"]));
+  const valYMax = d3.max(data.map((d) => d["y"]));
+
+  let xScale = d3.scaleLinear()
+    .domain([ 0, valXMax ])
+    .range([ height, margin.bottom]);
+
+  let yScale = d3.scaleLinear()
+    .domain([ 0, valYMax ])
+    .range([ 0, width ]);
+
+  svg.append("g")
+    .attr("transform", "translate(30," + (height) + ")")
+    .call(d3.axisBottom(xScale));
+
+  svg.append("g")
+    .attr("transform", "translate(" + 30 + "," + 0 + ")")
+    .call(d3.axisLeft(yScale));
+
+  svg.append("g")
+    .selectAll(".node")
+    .data(data)
+    .enter()
+    .append("circle")
+      .attr("cx", function(d){
+        return xScale(d["x"]);
+      })
+      .attr("cy", function(d){
+        return yScale(d["y"]);
+      })
+      .attr("r", 2)
+      .style("fill", "black")
+      .attr("stroke", "white");
+
+  let contourDensity = d3.contourDensity()
+    .x(function(d) { return xScale(d["x"]); })
+    .y(function(d) { return yScale(d["y"]); })
+    .size([width, height])
+    .cellSize(40)
+    .bandwidth(10)
+
+  let contourDensityValues = contourDensity(data);
+  console.log(contourDensityValues);
+
+  const color = d3.scaleSequential((t) => d3.interpolateRdBu(t))
+    .domain(
+      [ d3.max(contourDensityValues, function(d) { return d.value }), 0.00]
+    );
+
+  let polygon_vertices = d3.select("#convex_hull").data()[0];
+
+  // overlap contour on convex hull
+  svg.insert("g")
+    .attr("stroke", "none")
+    .attr("stroke-width", "0.0")
+    .selectAll("path")
+    .data(contourDensityValues)
+    .enter()
+    .append("path")
+    .attr("fill", function(d) { return color(d.value); })
+    .attr("d", d3.geoPath())
+    .attr("opacity", "0.1");
+</script>
