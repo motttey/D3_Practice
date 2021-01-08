@@ -34,8 +34,8 @@
   let data = new Array(n);
   for (let i = 0; i < n; i++) {
     data[i] = {
-      "x": d3.randomNormal(100, 50)(),
-      "y": d3.randomNormal(100, 20)(),
+      "x": d3.randomNormal(width/2, 100)(),
+      "y": d3.randomNormal(height/2, 100)(),
     };
   }
 
@@ -96,25 +96,33 @@
     .y((d) => parseFloat(d[1]))
     .curve(d3.curveCatmullRomClosed);
 
-  // overlap contour on convex hull
-  contourDensityValues.forEach((contourDensityValue, i) => {
-    console.log(contourDensityValue);
+  const contourDensityValuesAlter = contourDensityValues.map((d) =>
+    new Object({
+      coordinates: d.coordinates.flat(),
+      value: d.value,
+      type: "MultiPolygon"
+    }));
+
+  // curve-interpolated convex hull
+  contourDensityValuesAlter.forEach((polygons, i) => {
+    svg.insert("g")
+      .attr("stroke", "none")
+      .attr("stroke-width", "0.0")
+      .selectAll("path")
+      .data(polygons.coordinates)
+      .enter()
+      .append("path")
+      .attr("fill", color(polygons.value))
+      .attr("d", (d) => {
+        return interpolate(d);
+        /*
+        d3.geoPath()(d)
+          .replace(/M|Z/, "")
+          .split("L")
+          .map((d) => d.split(",")
+        */
+      })
+      .attr("opacity", "0.3");
   });
 
-  svg.insert("g")
-    .attr("stroke", "none")
-    .attr("stroke-width", "0.0")
-    .selectAll("path")
-    .data(contourDensityValues)
-    .enter()
-    .append("path")
-    .attr("fill", function(d) { return color(d.value); })
-    .attr("d", (d) => {
-      return interpolate(d3.geoPath()(d)
-        .replace(/M|Z/, "")
-        .split("L")
-        .map((d) => d.split(","))
-      );
-    })
-    .attr("opacity", "0.3");
 </script>
