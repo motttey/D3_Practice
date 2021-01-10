@@ -23,16 +23,6 @@ const scale = 1000; // 地図のスケール
 
 const margin = 50;
 
-// 地図の投影設定
-const projection = d3
-  .geoMercator()
-  .center(centerPos)
-  .translate([width / 2, height / 2])
-  .scale(scale);
-
-// 地図をpathに投影(変換)
-const path = d3.geoPath().projection(projection);
-
 // SVG要素を追加
 const svg = d3
   .select("#map_div")
@@ -51,6 +41,21 @@ let render_line = d3.line()
 
 setUpData();
 
+function getProjectionPath(magnify) {
+
+  // 地図の投影設定
+  const projection = d3
+    .geoMercator()
+    .center(centerPos)
+    .translate([width / 2, height / 2])
+    .scale(scale * (
+      d3.max([1, Math.pow(magnify, 2)]))
+    );
+
+  // 地図をpathに投影(変換)
+  return d3.geoPath().projection(projection);
+};
+
 async function setUpData() {
   const map = await d3.json("https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson");
   map.features.sort((a, b) => a.properties.id - b.properties.id);
@@ -67,24 +72,44 @@ async function setUpData() {
 
   const grouped_covid_data = Array.from(d3.group(covid_data, d => d["datetime"]).values());
   const lastweek_covid_data = grouped_covid_data.slice(grouped_covid_data.length - 30, grouped_covid_data.length - 1)
-  console.log(lastweek_covid_data);
 
-  lastweek_covid_data.forEach((data, index) => {
-    const each_data = data.map((d) => d["testedPositive"]);
+  svg
+    .append("g")
+    .attr("transform", "translate(" + (0) + "," + (0) + ")")
+    .selectAll("path")
+      .data(map.features)
+      .enter()
+      .append("path")
+      .attr("d", getProjectionPath(1))
+      .attr("class", "pref")
+      .style("stroke", "gray")
+      .style("stroke-width", 0.5)
+      .style("fill", "none");
+
+  const target = 13;
+  const selected_pref_data = lastweek_covid_data
+    .map((d) => d.filter((d, i) => i === target))
+    .flat()
+    .map((d) => d["testedPositive"]);
+
+  selected_pref_data.forEach((data, index) => {
+    const data_mean = d3.mean(selected_pref_data);
+    const target_map = map.features.filter((d) => d.properties.id === target + 1);
+
     svg
       .append("g")
-      .attr("transform", "translate(" + ( -margin + index * 5) + "," + (-margin + index * 5) +")")
+      .attr("transform", "translate(" + (index * 2) + "," + (index * 2) + ")")
       .selectAll("path")
-        .data(map.features)
+        .data(target_map)
         .enter()
         .append("path")
-        .attr("d", path)
+        .attr("d", getProjectionPath(data/data_mean))
         .attr("class", "pref")
-        .style("stroke", "gray")
-        .style("opacity", index / lastweek_covid_data.length)
-        .style("stroke-width", 1)
+        .style("stroke", "none")
+        .style("opacity", 0.1 + (index / lastweek_covid_data.length) / 2)
+        .style("stroke-width", 0.5)
         .style("fill", function(d,i){
-          return getColor(each_data[i], each_data);
+          return getColor(data, selected_pref_data);
         });
   });
 }
