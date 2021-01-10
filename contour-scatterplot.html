@@ -3,10 +3,10 @@
    <head>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <meta charset="utf-8"/>
-    <title>D3 Violin</title>
+    <title>D3 Contour Scatteplot</title>
   </head>
   <body>
-    <h1>D3 Violin</h1>
+    <h1>D3 Contour Scatteplot</h1>
     <div id="violin_div">
       <svg id="violin"></svg>
     </div>
@@ -31,13 +31,21 @@
     .attr("class", "violin");
 
   const n = 1000;
-  let data = new Array(n);
-  for (let i = 0; i < n; i++) {
-    data[i] = {
-      "x": d3.randomNormal(width/2, 100)(),
-      "y": d3.randomNormal(height/2, 100)(),
-    };
-  }
+  const n2 = 500;
+
+  let data = Array.apply(null, Array(n)).map((d, i) => {
+    if (i < n2) {
+      return new Object({
+        "x": d3.randomNormal(width/2, 100)(),
+        "y": d3.randomNormal(height/2, 100)()
+      })
+    } else {
+      return Object({
+        "x": d3.randomNormal(width/4, 50)(),
+        "y": d3.randomNormal(height/4, 50)()
+      })
+    }
+  });
 
   const valXMax = d3.max(data.map((d) => d["x"]));
   const valYMax = d3.max(data.map((d) => d["y"]));
@@ -77,8 +85,8 @@
     .x(function(d) { return xScale(d["x"]); })
     .y(function(d) { return yScale(d["y"]); })
     .size([width, height])
-    .cellSize(40)
-    .bandwidth(10)
+    .cellSize(35)
+    .bandwidth(20)
     .thresholds(10);
 
   let contourDensityValues = contourDensity(data);
@@ -112,6 +120,7 @@
       .data(polygons.coordinates)
       .enter()
       .append("path")
+      .attr("class", "polygon" + i.toString())
       .attr("fill", color(polygons.value))
       .attr("d", (d) => {
         return interpolate(d);
