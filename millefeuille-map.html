@@ -41,15 +41,14 @@ let render_line = d3.line()
 
 setUpData();
 
-function getProjectionPath(magnify) {
+function getProjectionPath(magnify, centroid) {
 
   // 地図の投影設定
   const projection = d3
     .geoMercator()
-    .center(centerPos)
+    .center(centroid)
     .translate([width / 2, height / 2])
-    .scale(scale * (
-      d3.max([1, Math.pow(magnify, 2)]))
+    .scale(scale * Math.sqrt(magnify)
     );
 
   // 地図をpathに投影(変換)
@@ -73,6 +72,28 @@ async function setUpData() {
   const grouped_covid_data = Array.from(d3.group(covid_data, d => d["datetime"]).values());
   const lastweek_covid_data = grouped_covid_data.slice(grouped_covid_data.length - 30, grouped_covid_data.length - 1)
 
+  const target = 13;
+  const selected_pref_data = lastweek_covid_data
+    .map((d) => d.filter((d, i) => i === target))
+    .flat()
+    .map((d) => d["testedPositive"])
+
+  const selected_pref_data_diff = selected_pref_data.map((x, i) => {
+      return selected_pref_data[i+1] - x
+    })
+    .filter(Number);
+
+  console.log(selected_pref_data_diff);
+
+  const init_proj = d3
+      .geoMercator()
+      .center(centerPos)
+      .translate([width / 2, height / 2])
+      .scale(scale);
+
+  const target_map = map.features.filter((d) => d.properties.id === target + 1);
+  const centroid = d3.geoCentroid(target_map[0]);
+
   svg
     .append("g")
     .attr("transform", "translate(" + (0) + "," + (0) + ")")
@@ -80,36 +101,29 @@ async function setUpData() {
       .data(map.features)
       .enter()
       .append("path")
-      .attr("d", getProjectionPath(1))
+      .attr("d", getProjectionPath(1, centroid))
       .attr("class", "pref")
       .style("stroke", "gray")
       .style("stroke-width", 0.5)
       .style("fill", "none");
 
-  const target = 13;
-  const selected_pref_data = lastweek_covid_data
-    .map((d) => d.filter((d, i) => i === target))
-    .flat()
-    .map((d) => d["testedPositive"]);
-
-  selected_pref_data.forEach((data, index) => {
-    const data_mean = d3.mean(selected_pref_data);
-    const target_map = map.features.filter((d) => d.properties.id === target + 1);
+  selected_pref_data_diff.forEach((data, index) => {
+    const data_mean = d3.mean(selected_pref_data_diff);
 
     svg
       .append("g")
-      .attr("transform", "translate(" + (index * 2) + "," + (index * 2) + ")")
+      .attr("transform", "translate(" + (index) + "," + (index) + ")")
       .selectAll("path")
         .data(target_map)
         .enter()
         .append("path")
-        .attr("d", getProjectionPath(data/data_mean))
+        .attr("d", getProjectionPath(data/selected_pref_data_diff[0], centroid))
         .attr("class", "pref")
         .style("stroke", "none")
-        .style("opacity", 0.1 + (index / lastweek_covid_data.length) / 2)
+        .style("opacity", 0.1 + (index / lastweek_covid_data.length))
         .style("stroke-width", 0.5)
-        .style("fill", function(d,i){
-          return getColor(data, selected_pref_data);
+        .style("fill", function(d,i) {
+          return getColor(data, selected_pref_data_diff);
         });
   });
 }
