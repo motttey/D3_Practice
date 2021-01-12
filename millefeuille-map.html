@@ -6,6 +6,11 @@
     <title>D3 Interactive Map</title>
   </head>
   <body>
+    <div>
+      <input type="range" id="prefecture" name="prefecture"
+             min="1" max="47" value="13" step="1">
+      <label for="prefecture">Prefecture</label>
+    </div>
     <div id="map_div">
       <svg id="map"></svg>
     </div>
@@ -71,7 +76,9 @@ async function setUpData() {
 
   const grouped_covid_data = Array.from(d3.group(covid_data, d => d["datetime"]).values());
   const lastweek_covid_data = grouped_covid_data.slice(grouped_covid_data.length - 30, grouped_covid_data.length - 1)
+}
 
+function showSelectedPref(data, target_pref) {
   const target = 13;
   const selected_pref_data = lastweek_covid_data
     .map((d) => d.filter((d, i) => i === target))
