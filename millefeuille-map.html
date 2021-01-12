@@ -65,21 +65,21 @@ async function setUpData() {
   map.features.sort((a, b) => a.properties.id - b.properties.id);
 
   const covid_data = await d3.csv("https://raw.githubusercontent.com/kaz-ogiwara/covid19/master/data/prefectures.csv");
-  console.log(covid_data);
   covid_data.forEach((d) => {
     d["datetime"] = d["year"] + "-" + d["month"] + "-" + d["date"];
   });
 
-  function getColor(target, data) {
-    return d3.interpolateRdBu(Math.log(target)/Math.log(d3.max(data)));
-  }
-
   const grouped_covid_data = Array.from(d3.group(covid_data, d => d["datetime"]).values());
-  const lastweek_covid_data = grouped_covid_data.slice(grouped_covid_data.length - 30, grouped_covid_data.length - 1)
+  const lastweek_covid_data = grouped_covid_data.slice(grouped_covid_data.length - 30, grouped_covid_data.length - 1);
+
+  showSelectedPref(map, lastweek_covid_data, 11);
 }
 
-function showSelectedPref(data, target_pref) {
-  const target = 13;
+function getColor(target, data) {
+  return d3.interpolateRdBu(Math.log(target)/Math.log(d3.max(data)));
+}
+
+function showSelectedPref(map, lastweek_covid_data, target) {
   const selected_pref_data = lastweek_covid_data
     .map((d) => d.filter((d, i) => i === target))
     .flat()
@@ -115,8 +115,6 @@ function showSelectedPref(data, target_pref) {
       .style("fill", "none");
 
   selected_pref_data_diff.forEach((data, index) => {
-    const data_mean = d3.mean(selected_pref_data_diff);
-
     svg
       .append("g")
       .attr("transform", "translate(" + (index) + "," + (index) + ")")
@@ -126,9 +124,9 @@ function showSelectedPref(data, target_pref) {
         .append("path")
         .attr("d", getProjectionPath(data/selected_pref_data_diff[0], centroid))
         .attr("class", "pref")
-        .style("stroke", "none")
+        .style("stroke", "black")
         .style("opacity", 0.1 + (index / lastweek_covid_data.length))
-        .style("stroke-width", 0.5)
+        .style("stroke-width", 0.2)
         .style("fill", function(d,i) {
           return getColor(data, selected_pref_data_diff);
         });
