@@ -7,9 +7,17 @@
   </head>
   <body>
     <div>
-      <input type="range" id="prefecture" name="prefecture"
-             min="1" max="47" value="13" step="1">
-      <label for="prefecture">Prefecture</label>
+      <label for="prefectureRange">Prefecture</label>
+      <input
+        type="range"
+        id="prefectureRange"
+        name="prefecture"
+        min="1" max="47" value="13" step="1"
+        oninput="prefectureRangeLabel.value = prefectureRange.value;"
+      />
+      <output id="prefectureRangeLabel" for="prefectureRange" >
+        13
+      </output>
     </div>
     <div id="map_div">
       <svg id="map"></svg>
@@ -72,7 +80,14 @@ async function setUpData() {
   const grouped_covid_data = Array.from(d3.group(covid_data, d => d["datetime"]).values());
   const lastweek_covid_data = grouped_covid_data.slice(grouped_covid_data.length - 30, grouped_covid_data.length - 1);
 
-  showSelectedPref(map, lastweek_covid_data, 11);
+  showSelectedPref(map, lastweek_covid_data, 12);
+
+  document.getElementById("prefectureRange")
+    .addEventListener("change",
+    function() {
+      console.log(this.value);
+      showSelectedPref(map, lastweek_covid_data, parseInt(this.value) - 1)
+    }, false);
 }
 
 function getColor(target, data) {
@@ -100,6 +115,8 @@ function showSelectedPref(map, lastweek_covid_data, target) {
 
   const target_map = map.features.filter((d) => d.properties.id === target + 1);
   const centroid = d3.geoCentroid(target_map[0]);
+
+  svg.selectAll("g").remove();
 
   svg
     .append("g")
