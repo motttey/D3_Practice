@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Star Glyph</title>
+  </head>
+  <body>
+    <h1>D3 Star Glyph</h1>
+    <div id="star_glyph_div">
+      <svg id="star_glyph"></svg>
+    </div>
+  </body>
+
+  <style>
+  </style>
+
+  <script>
+    setUp();
+
+    async function setUp() {
+      const penguins_data = await d3.csv("https://raw.githubusercontent.com/allisonhorst/palmerpenguins/master/inst/extdata/penguins_raw.csv");
+      const penguins_data_mapped = penguins_data
+        .filter((d) => {
+          return d["Culmen Depth (mm)"] !== "NA"
+            && d["Culmen Length (mm)"] !== "NA"
+            && d["Flipper Length (mm)"] !== "NA"
+            && d["Delta 13 C (o/oo)"] !== "NA"
+            && d["Delta 15 N (o/oo)"] !== "NA"
+        })
+        .map((d) => {
+          return new Object(
+            {
+              name: d["studyName"] + d["Sample"],
+              culmen_depth: parseFloat(d["Culmen Depth (mm)"]),
+              culmen_length: parseFloat(d["Culmen Length (mm)"]),
+              flipper_length: parseFloat(d["Flipper Length (mm)"]),
+              delta_13_c: parseFloat(d["Delta 13 C (o/oo)"]),
+              delta_15_n: parseFloat(d["Delta 15 N (o/oo)"]),
+            }
+          )
+        });
+
+      console.log(penguins_data_mapped);
+    }
+
+  </script>
+</html>
