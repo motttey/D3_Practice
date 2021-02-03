@@ -18,6 +18,7 @@
   <script>
     const width = 800;
     const height = 800;
+    const glyph_size = 30;
     const margin = { top: 50, right: 50, bottom: 50, left: 50 };
 
     const target_columns = [
@@ -48,8 +49,20 @@
         setAxis(data);
       });
 
+    function getRadius(max, i) {
+      return ((360 / max) * i) * Math.PI / 180
+    }
+
     function setAxis(data) {
+      const g = svg
+        .append("g")
+        .attr("transform",
+          "translate(" + margin.top + "," + margin.left + ")");
+
+      const values = [];
+      const numColumns = target_columns_after.length;
       target_columns_after.forEach((c, i) => {
+
         const minVal = d3.min(data, (d) => {
           return d[c];
         });
@@ -57,11 +70,23 @@
           return d[c];
         });
 
+        console.log(getRadius(numColumns, i));
+
+        let xScale = d3.scaleLinear()
+          .domain([ minVal, maxVal ])
+          .range([ 0, glyph_size * Math.cos(getRadius(numColumns, i)) ]);
+
         let yScale = d3.scaleLinear()
           .domain([ minVal, maxVal ])
-          .range([ 0, 1 ]);
+          .range([ 0, glyph_size * Math.sin(getRadius(numColumns, i)) ]);
 
-        console.log(yScale(data[0][c]));
+        g.append("line")
+          .attr("x1", xScale(minVal))
+          .attr("y1", yScale(minVal))
+          .attr("x2", xScale(maxVal))
+          .attr("y2", yScale(maxVal))
+          .attr("stroke","gray")
+          .attr("stroke-width", 1);
       });
     }
 
@@ -84,6 +109,5 @@
           )
         });
     }
-
   </script>
 </html>
