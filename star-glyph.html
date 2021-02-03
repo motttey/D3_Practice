@@ -16,32 +16,73 @@
   </style>
 
   <script>
-    setUp();
+    const width = 800;
+    const height = 800;
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+
+    const target_columns = [
+      "Culmen Depth (mm)",
+      "Culmen Length (mm)",
+      "Flipper Length (mm)",
+      "Delta 13 C (o/oo)",
+      "Delta 15 N (o/oo)"
+    ];
+
+    const target_columns_after = [
+      "culmen_depth",
+      "culmen_length",
+      "flipper_length",
+      "delta_13_c",
+      "delta_15_n"
+    ];
+
+    // SVG要素を追加
+    const svg = d3
+      .select("#star_glyph_div")
+      .select("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    const data = setUp()
+      .then((data) => {
+        setAxis(data);
+      });
+
+    function setAxis(data) {
+      target_columns_after.forEach((c, i) => {
+        const minVal = d3.min(data, (d) => {
+          return d[c];
+        });
+        const maxVal = d3.max(data, (d) => {
+          return d[c];
+        });
+
+        let yScale = d3.scaleLinear()
+          .domain([ minVal, maxVal ])
+          .range([ 0, 1 ]);
+
+        console.log(yScale(data[0][c]));
+      });
+    }
 
     async function setUp() {
       const penguins_data = await d3.csv("https://raw.githubusercontent.com/allisonhorst/palmerpenguins/master/inst/extdata/penguins_raw.csv");
-      const penguins_data_mapped = penguins_data
+      return penguins_data
         .filter((d) => {
-          return d["Culmen Depth (mm)"] !== "NA"
-            && d["Culmen Length (mm)"] !== "NA"
-            && d["Flipper Length (mm)"] !== "NA"
-            && d["Delta 13 C (o/oo)"] !== "NA"
-            && d["Delta 15 N (o/oo)"] !== "NA"
+          return target_columns.every((c) => d[c] !== "NA")
         })
         .map((d) => {
           return new Object(
             {
               name: d["studyName"] + d["Sample"],
-              culmen_depth: parseFloat(d["Culmen Depth (mm)"]),
-              culmen_length: parseFloat(d["Culmen Length (mm)"]),
-              flipper_length: parseFloat(d["Flipper Length (mm)"]),
-              delta_13_c: parseFloat(d["Delta 13 C (o/oo)"]),
-              delta_15_n: parseFloat(d["Delta 15 N (o/oo)"]),
+              culmen_depth: parseFloat(d[target_columns[0]]),
+              culmen_length: parseFloat(d[target_columns[1]]),
+              flipper_length: parseFloat(d[target_columns[2]]),
+              delta_13_c: parseFloat(d[target_columns[3]]),
+              delta_15_n: parseFloat(d[target_columns[4]]),
             }
           )
         });
-
-      console.log(penguins_data_mapped);
     }
 
   </script>
