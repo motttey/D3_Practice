@@ -59,7 +59,7 @@
         .attr("transform",
           "translate(" + margin.top + "," + margin.left + ")");
 
-      const values = [];
+      const vertices = [];
       const numColumns = target_columns_after.length;
       target_columns_after.forEach((c, i) => {
 
@@ -87,7 +87,20 @@
           .attr("y2", yScale(maxVal))
           .attr("stroke","gray")
           .attr("stroke-width", 1);
+
+        vertices.push([xScale(data[0][c]), yScale(data[0][c])]);
       });
+
+      let line = d3.line()
+          // .curve (d3.curveCatmullRomClosed)
+          .x (function(d) { return d[0]; })
+          .y (function(d) { return d[1]; });
+
+      g.append("path")
+        .attr("d", line(vertices))
+        .attr("fill", "darkred")
+        .attr("stroke", "red")
+        .attr("opacity", "0.5");
     }
 
     async function setUp() {
