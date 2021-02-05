@@ -52,19 +52,53 @@
       });
 
     function execDR(data) {
-      const data_matrix = data.map((d) => {
+      const g = svg
+        .append("g")
+        .attr("transform",
+          "translate(" + margin.top + "," + margin.left + ")");
+
+      const data_matrix = data[:50].map((d) => {
         return target_columns_after.map((c) => {
           return d[c];
         });
       });
 
-      console.log(data_matrix);
       let matrix = druid.Matrix.from(data_matrix);
       const pca = druid["PCA"];
       const dr = new pca(matrix);
-      const result = dr.transform();
+      const result = dr.transform().to2dArray;
 
-      console.log(result.to2dArray);
+      const xMin = d3.min(result, (d) => {
+        return d[0];
+      });
+      const xMax = d3.max(result, (d) => {
+        return d[0];
+      });
+
+      const yMin = d3.min(result, (d) => {
+        return d[1];
+      });
+      const yMax = d3.max(result, (d) => {
+        return d[1];
+      });
+
+      let xScale = d3.scaleLinear()
+        .domain([ xMin, xMax ])
+        .range([ margin.left , width - margin.right ]);
+
+      let yScale = d3.scaleLinear()
+        .domain([ yMin, yMax ])
+        .range([ margin.top , height - margin.bottom ]);
+
+      g.selectAll("circle")
+        .data(result)
+        .enter()
+        .append("circle")
+        .attr("class", "node")
+        .attr("cx", (d) => xScale(d[0]))
+        .attr("cy", (d) => yScale(d[1]))
+        .attr("r", 2)
+        .attr("fill", "red");
     }
 
     function getRadius(max, i) {
