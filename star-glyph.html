@@ -2,6 +2,7 @@
 <html lang="en">
    <head>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://unpkg.com/@saehrimnir/druidjs"></script>
     <meta charset="utf-8"/>
     <title>D3 Star Glyph</title>
   </head>
@@ -47,7 +48,24 @@
     const data = setUp()
       .then((data) => {
         setAxis(data);
+        execDR(data);
       });
+
+    function execDR(data) {
+      const data_matrix = data.map((d) => {
+        return target_columns_after.map((c) => {
+          return d[c];
+        });
+      });
+
+      console.log(data_matrix);
+      let matrix = druid.Matrix.from(data_matrix);
+      const pca = druid["PCA"];
+      const dr = new pca(matrix);
+      const result = dr.transform();
+
+      console.log(result.to2dArray);
+    }
 
     function getRadius(max, i) {
       return ((360 / max) * i) * Math.PI / 180
