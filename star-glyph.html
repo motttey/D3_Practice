@@ -47,7 +47,7 @@
 
     const data = setUp()
       .then((data) => {
-        setAxis(data);
+        // setAxis(data);
         execDR(data);
       });
 
@@ -57,7 +57,7 @@
         .attr("transform",
           "translate(" + margin.top + "," + margin.left + ")");
 
-      const data_matrix = data[:50].map((d) => {
+      const data_matrix = data.map((d) => {
         return target_columns_after.map((c) => {
           return d[c];
         });
@@ -82,14 +82,66 @@
         return d[1];
       });
 
-      let xScale = d3.scaleLinear()
+      let globalXScale = d3.scaleLinear()
         .domain([ xMin, xMax ])
         .range([ margin.left , width - margin.right ]);
 
-      let yScale = d3.scaleLinear()
+      let globalYScale = d3.scaleLinear()
         .domain([ yMin, yMax ])
         .range([ margin.top , height - margin.bottom ]);
 
+      const numColumns = target_columns_after.length;
+      const starScaleList = target_columns_after.map((c, i) => {
+        const minVal = d3.min(data, (d) => {
+          return d[c];
+        });
+        const maxVal = d3.max(data, (d) => {
+          return d[c];
+        });
+
+        let xScale = d3.scaleLinear()
+          .domain([ minVal, maxVal ])
+          .range([ 0, glyph_size * Math.cos(getRadius(numColumns, i)) ]);
+
+        let yScale = d3.scaleLinear()
+          .domain([ minVal, maxVal ])
+          .range([ 0, glyph_size * Math.sin(getRadius(numColumns, i)) ]);
+
+        return {
+          "xScale": xScale,
+          "yScale": yScale
+        }
+      });
+
+      let line = d3.line()
+          // .curve (d3.curveCatmullRomClosed)
+          .x (function(d) { return d[0]; })
+          .y (function(d) { return d[1]; });
+          
+      result.forEach((d, i) => {
+        const g = svg
+          .append("g")
+          .attr("transform",
+            "translate("
+              + globalXScale(d[0]) + ","
+              + globalYScale(d[1]) + ")");
+
+        const vertices = [];
+        target_columns_after.forEach((c, j) => {
+          vertices.push([
+            starScaleList[j].xScale(data[i][c]),
+            starScaleList[j].yScale(data[i][c])
+          ]);
+        });
+
+        g.append("path")
+          .attr("d", line(vertices))
+          .attr("fill", "darkred")
+          .attr("stroke", "red")
+          .attr("opacity", 0.3);
+      });
+
+      /*
       g.selectAll("circle")
         .data(result)
         .enter()
@@ -99,6 +151,7 @@
         .attr("cy", (d) => yScale(d[1]))
         .attr("r", 2)
         .attr("fill", "red");
+      */
     }
 
     function getRadius(max, i) {
@@ -121,8 +174,6 @@
         const maxVal = d3.max(data, (d) => {
           return d[c];
         });
-
-        console.log(getRadius(numColumns, i));
 
         let xScale = d3.scaleLinear()
           .domain([ minVal, maxVal ])
