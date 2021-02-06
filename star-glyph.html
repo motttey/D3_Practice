@@ -19,7 +19,7 @@
   <script>
     const width = 800;
     const height = 800;
-    const glyph_size = 30;
+    const glyph_size = 20;
     const margin = { top: 50, right: 50, bottom: 50, left: 50 };
 
     const target_columns = [
@@ -52,6 +52,11 @@
       });
 
     function execDR(data) {
+      console.log(data);
+      const labels = data
+        .map((d) => d["name"])
+        .filter((d, i, arr) => arr.indexOf(d) === i);
+
       const g = svg
         .append("g")
         .attr("transform",
@@ -117,7 +122,7 @@
           // .curve (d3.curveCatmullRomClosed)
           .x (function(d) { return d[0]; })
           .y (function(d) { return d[1]; });
-          
+
       result.forEach((d, i) => {
         const g = svg
           .append("g")
@@ -133,25 +138,13 @@
             starScaleList[j].yScale(data[i][c])
           ]);
         });
-
+        
         g.append("path")
           .attr("d", line(vertices))
-          .attr("fill", "darkred")
-          .attr("stroke", "red")
+          .attr("fill", d3.schemeCategory10[labels.indexOf(data[i]["name"])])
+          // .attr("stroke", "red")
           .attr("opacity", 0.3);
       });
-
-      /*
-      g.selectAll("circle")
-        .data(result)
-        .enter()
-        .append("circle")
-        .attr("class", "node")
-        .attr("cx", (d) => xScale(d[0]))
-        .attr("cy", (d) => yScale(d[1]))
-        .attr("r", 2)
-        .attr("fill", "red");
-      */
     }
 
     function getRadius(max, i) {
@@ -208,6 +201,7 @@
 
     async function setUp() {
       const penguins_data = await d3.csv("https://raw.githubusercontent.com/allisonhorst/palmerpenguins/master/inst/extdata/penguins_raw.csv");
+
       return penguins_data
         .filter((d) => {
           return target_columns.every((c) => d[c] !== "NA")
@@ -215,7 +209,7 @@
         .map((d) => {
           return new Object(
             {
-              name: d["studyName"] + d["Sample"],
+              name: d["studyName"],
               culmen_depth: parseFloat(d[target_columns[0]]),
               culmen_length: parseFloat(d[target_columns[1]]),
               flipper_length: parseFloat(d[target_columns[2]]),
