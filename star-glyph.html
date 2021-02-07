@@ -62,9 +62,17 @@
         .attr("transform",
           "translate(" + margin.top + "," + margin.left + ")");
 
+      const minMaxList = target_columns_after.map((c, i) => {
+        return new Array(
+          d3.min(data, (d) => { return d[c]; }),
+          d3.max(data, (d) => { return d[c]; })
+        )
+      });
+
       const data_matrix = data.map((d) => {
-        return target_columns_after.map((c) => {
-          return d[c];
+        return target_columns_after.map((c, i) => {
+          // 正規化
+          return (minMaxList[i][1] -  d[c])/(minMaxList[i][1] - minMaxList[i][0]);
         });
       });
 
@@ -73,19 +81,11 @@
       const dr = new pca(matrix);
       const result = dr.transform().to2dArray;
 
-      const xMin = d3.min(result, (d) => {
-        return d[0];
-      });
-      const xMax = d3.max(result, (d) => {
-        return d[0];
-      });
+      const xMin = d3.min(result, (d) => d[0]);
+      const xMax = d3.max(result, (d) => d[0]);
 
-      const yMin = d3.min(result, (d) => {
-        return d[1];
-      });
-      const yMax = d3.max(result, (d) => {
-        return d[1];
-      });
+      const yMin = d3.min(result, (d) => d[1]);
+      const yMax = d3.max(result, (d) => d[1]);
 
       let globalXScale = d3.scaleLinear()
         .domain([ xMin, xMax ])
@@ -97,19 +97,12 @@
 
       const numColumns = target_columns_after.length;
       const starScaleList = target_columns_after.map((c, i) => {
-        const minVal = d3.min(data, (d) => {
-          return d[c];
-        });
-        const maxVal = d3.max(data, (d) => {
-          return d[c];
-        });
-
         let xScale = d3.scaleLinear()
-          .domain([ minVal, maxVal ])
+          .domain([ minMaxList[i][0], minMaxList[i][1] ])
           .range([ 0, glyph_size * Math.cos(getRadius(numColumns, i)) ]);
 
         let yScale = d3.scaleLinear()
-          .domain([ minVal, maxVal ])
+          .domain([ minMaxList[i][0], minMaxList[i][1] ])
           .range([ 0, glyph_size * Math.sin(getRadius(numColumns, i)) ]);
 
         return {
@@ -138,7 +131,7 @@
             starScaleList[j].yScale(data[i][c])
           ]);
         });
-        
+
         g.append("path")
           .attr("d", line(vertices))
           .attr("fill", d3.schemeCategory10[labels.indexOf(data[i]["name"])])
