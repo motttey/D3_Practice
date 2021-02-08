@@ -60,7 +60,7 @@
       const g = svg
         .append("g")
         .attr("transform",
-          "translate(" + margin.top + "," + margin.left + ")");
+          "translate(" + margin.left + "," + margin.top + ")");
 
       const minMaxList = target_columns_after.map((c, i) => {
         return new Array(
@@ -94,6 +94,14 @@
       let globalYScale = d3.scaleLinear()
         .domain([ yMin, yMax ])
         .range([ margin.top , height - margin.bottom ]);
+
+      svg.append("g")
+        .attr("transform", "translate(0," + (height - margin.bottom) + ")")
+        .call(d3.axisBottom(globalXScale));
+
+      svg.append("g")
+        .attr("transform", "translate(" + margin.left + "," + 0 + ")")
+        .call(d3.axisLeft(globalYScale));
 
       const numColumns = target_columns_after.length;
       const starScaleList = target_columns_after.map((c, i) => {
