@@ -132,6 +132,22 @@ function showSelectedPref(map, lastweek_covid_data, target) {
       .style("fill", "none");
 
   selected_pref_data_diff.forEach((data, index) => {
+    if (index % 10 === 0) {
+      svg
+        .append("g")
+        .attr("transform", "translate(" + (index) + "," + (index) + ")")
+        .selectAll("path")
+          .data(map.features)
+          .enter()
+          .append("path")
+          .attr("d", getProjectionPath(1, centroid))
+          .attr("class", "pref")
+          .style("stroke", "gray")
+          .style("stroke-width", 0.5)
+          .style("fill", "none")
+          .style("opacity", 0.1);
+    }
+
     svg
       .append("g")
       .attr("transform", "translate(" + (index) + "," + (index) + ")")
