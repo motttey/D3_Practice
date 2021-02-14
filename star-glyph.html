@@ -54,7 +54,7 @@
     function execDR(data) {
       console.log(data);
       const labels = data
-        .map((d) => d["name"])
+        .map((d) => d["species"])
         .filter((d, i, arr) => arr.indexOf(d) === i);
 
       const g = svg
@@ -142,8 +142,7 @@
 
         g.append("path")
           .attr("d", line(vertices))
-          .attr("fill", d3.schemeCategory10[labels.indexOf(data[i]["name"])])
-          // .attr("stroke", "red")
+          .attr("fill", d3.schemeCategory10[labels.indexOf(data[i]["species"])])
           .attr("opacity", 0.3);
       });
     }
@@ -202,6 +201,7 @@
 
     async function setUp() {
       const penguins_data = await d3.csv("https://raw.githubusercontent.com/allisonhorst/palmerpenguins/master/inst/extdata/penguins_raw.csv");
+      console.log(penguins_data);
 
       return penguins_data
         .filter((d) => {
@@ -211,6 +211,7 @@
           return new Object(
             {
               name: d["studyName"],
+              species: d["Species"],
               culmen_depth: parseFloat(d[target_columns[0]]),
               culmen_length: parseFloat(d[target_columns[1]]),
               flipper_length: parseFloat(d[target_columns[2]]),
