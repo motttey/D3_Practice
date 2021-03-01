@@ -66,7 +66,7 @@
     .attr("transform", "translate(" + margin.left + "," + 0 + ")")
     .call(d3.axisLeft(yScale));
 
-  svg.append("g")
+  const circles = svg.append("g")
     .selectAll(".node")
     .data(data)
     .enter()
@@ -126,10 +126,10 @@
         return interpolate(d);
       })
       .attr("opacity", "0.3")
-      .on("click", (_, polygon) => {
-        const filtered= data
+      .on("click", (_, p) => {
+        const filtered = data
           .map((d) => [xScale(d["x"]), yScale(d["y"])])
-          .filter((d) => d3.polygonContains(polygon, d));
+          .filter((d) => d3.polygonContains(p, d));
 
         // show data in selected polygon
         svg.append("g")
@@ -152,11 +152,29 @@
         .on("start", (event, d) =>
           polygon.attr("stroke", "black")
         )
-        .on("drag", (event, d) =>
-          polygon.attr("transform",
-            (d) => "translate("+[ event.x - width/2, (event.y - height/2)]+")" )
-        )
-        .on("end", (event, d) => polygon.attr("stroke", null)));
+        .on("drag", (event, d) => {
+          polygon.attr("transform", (d) =>
+            "translate("
+              +[ event.x - width/2, (event.y - height/2)]
+              + ")" )
+        })
+        .on("end", (event, d) => {
+          polygon.attr("stroke", null);
+
+          const filtered = circles
+            .filter((c) => {
+              return d3.polygonContains(d,
+                [xScale(c["x"]), yScale(c["y"])]);
+            });
+
+          filtered
+            .transition(1000)
+            .attr("transform", (d) =>
+              "translate("
+                +[ event.x - width/2, (event.y - height/2)]
+                + ")" );
+        })
+      );
   });
 
 </script>
