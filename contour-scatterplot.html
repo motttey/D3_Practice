@@ -113,7 +113,7 @@
 
   // curve-interpolated convex hull
   contourDensityValuesAlter.forEach((polygons, i) => {
-    svg.insert("g")
+    const polygon = svg.insert("g")
       .attr("stroke", "none")
       .attr("stroke-width", "0.0")
       .selectAll("path")
@@ -147,6 +147,16 @@
             .style("fill", "red")
             .attr("stroke", "white");
       });
+
+      polygon.call(d3.drag()
+        .on("start", (event, d) =>
+          polygon.attr("stroke", "black")
+        )
+        .on("drag", (event, d) =>
+          polygon.attr("transform",
+            (d) => "translate("+[ event.x - width/2, (event.y - height/2)]+")" )
+        )
+        .on("end", (event, d) => polygon.attr("stroke", null)));
   });
 
 </script>
