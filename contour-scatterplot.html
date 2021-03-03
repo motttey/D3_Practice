@@ -85,8 +85,8 @@
     .x(function(d) { return xScale(d["x"]); })
     .y(function(d) { return yScale(d["y"]); })
     .size([width, height])
-    .cellSize(35)
-    .bandwidth(20)
+    .cellSize(20)
+    .bandwidth(15)
     .thresholds(10);
 
   let contourDensityValues = contourDensity(data);
@@ -113,68 +113,72 @@
 
   // curve-interpolated convex hull
   contourDensityValuesAlter.forEach((polygons, i) => {
-    const polygon = svg.insert("g")
-      .attr("stroke", "none")
-      .attr("stroke-width", "0.0")
-      .selectAll("path")
-      .data(polygons.coordinates)
-      .enter()
-      .append("path")
-      .attr("class", "polygon" + i.toString())
-      .attr("fill", color(polygons.value))
-      .attr("d", (d) => {
-        return interpolate(d);
-      })
-      .attr("opacity", "0.3")
-      .on("click", (_, p) => {
-        const filtered = data
-          .map((d) => [xScale(d["x"]), yScale(d["y"])])
-          .filter((d) => d3.polygonContains(p, d));
-
-        // show data in selected polygon
-        svg.append("g")
-          .selectAll(".selected-node")
-          .data(filtered)
-          .enter()
-          .append("circle")
-            .attr("cx", function(d){
-              return d[0];
-            })
-            .attr("cy", function(d){
-              return d[1];
-            })
-            .attr("r", 2)
-            .style("fill", "red")
-            .attr("stroke", "white");
-      });
-
-      polygon.call(d3.drag()
-        .on("start", (event, d) =>
-          polygon.attr("stroke", "black")
-        )
-        .on("drag", (event, d) => {
-          polygon.attr("transform", (d) =>
-            "translate("
-              +[ event.x - width/2, (event.y - height/2)]
-              + ")" )
+    const polygonList = polygons.coordinates.flat();
+    polygons.coordinates.forEach((eachPolygon) => {
+      const polygon = svg.insert("g")
+        .attr("stroke", "none")
+        .attr("stroke-width", "0.0")
+        .selectAll("path")
+        .data(eachPolygon)
+        .enter()
+        .append("path")
+        .attr("class", "polygon" + i.toString())
+        .attr("fill", color(polygons.value))
+        .attr("d", (d) => {
+          return interpolate(eachPolygon);
         })
-        .on("end", (event, d) => {
-          polygon.attr("stroke", null);
+        .attr("opacity", "0.1")
+        .on("click", (_, p) => {
+          const filtered = data
+            .map((d) => [xScale(d["x"]), yScale(d["y"])])
+            .filter((d) => d3.polygonContains(p, d));
 
-          const filtered = circles
-            .filter((c) => {
-              return d3.polygonContains(d,
-                [xScale(c["x"]), yScale(c["y"])]);
-            });
+          // show data in selected polygon
+          svg.append("g")
+            .selectAll(".selected-node")
+            .data(filtered)
+            .enter()
+            .append("circle")
+              .attr("cx", function(d){
+                return d[0];
+              })
+              .attr("cy", function(d){
+                return d[1];
+              })
+              .attr("r", 2)
+              .style("fill", "red")
+              .attr("stroke", "white");
+        });
 
-          filtered
-            .transition(1000)
-            .attr("transform", (d) =>
+        polygon.call(d3.drag()
+          .on("start", (event, d) =>
+            polygon.attr("stroke", "black")
+          )
+          .on("drag", (event, d) => {
+            polygon.attr("transform", (d) =>
               "translate("
                 +[ event.x - width/2, (event.y - height/2)]
-                + ")" );
-        })
-      );
+                + ")" )
+          })
+          .on("end", (event, d) => {
+            polygon.attr("stroke", null);
+
+            const filtered = circles
+              .filter((c) => {
+                return d3.polygonContains(d,
+                  [xScale(c["x"]), yScale(c["y"])]);
+              });
+
+            filtered
+              .transition(1000)
+              .attr("transform", (d) =>
+                "translate("
+                  +[ event.x - width/2, (event.y - height/2)]
+                  + ")" );
+          })
+        );
+    });
+
   });
 
 </script>
