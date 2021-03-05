@@ -66,21 +66,6 @@
     .attr("transform", "translate(" + margin.left + "," + 0 + ")")
     .call(d3.axisLeft(yScale));
 
-  const circles = svg.append("g")
-    .selectAll(".node")
-    .data(data)
-    .enter()
-    .append("circle")
-      .attr("cx", function(d){
-        return xScale(d["x"]);
-      })
-      .attr("cy", function(d){
-        return yScale(d["y"]);
-      })
-      .attr("r", 2)
-      .style("fill", "black")
-      .attr("stroke", "white");
-
   let contourDensity = d3.contourDensity()
     .x(function(d) { return xScale(d["x"]); })
     .y(function(d) { return yScale(d["y"]); })
@@ -116,6 +101,7 @@
     const polygonList = polygons.coordinates.flat();
     polygons.coordinates.forEach((eachPolygon) => {
       const polygon = svg.insert("g")
+        .attr("class", "polygon")
         .attr("stroke", "none")
         .attr("stroke-width", "0.0")
         .selectAll("path")
@@ -163,9 +149,9 @@
           .on("end", (event, d) => {
             polygon.attr("stroke", null);
 
-            const filtered = circles
+            const filtered = d3.selectAll("circle")
               .filter((c) => {
-                return d3.polygonContains(d,
+                return d3.polygonContains(eachPolygon,
                   [xScale(c["x"]), yScale(c["y"])]);
               });
 
@@ -178,7 +164,21 @@
           })
         );
     });
-
   });
+
+  const circles = svg.append("g")
+    .selectAll(".node")
+    .data(data)
+    .enter()
+    .append("circle")
+      .attr("cx", function(d){
+        return xScale(d["x"]);
+      })
+      .attr("cy", function(d){
+        return yScale(d["y"]);
+      })
+      .attr("r", 2)
+      .style("fill", "black")
+      .attr("stroke", "white");
 
 </script>
