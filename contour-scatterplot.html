@@ -7,8 +7,8 @@
   </head>
   <body>
     <h1>D3 Contour Scatteplot</h1>
-    <div id="violin_div">
-      <svg id="violin"></svg>
+    <div id="contour_scatterplot_div">
+      <svg id="contour_scatterplot"></svg>
     </div>
   </body>
 </html>
@@ -23,12 +23,12 @@
 
   // SVG要素を追加
   const svg = d3
-    .select("#violin_div")
+    .select("#contour_scatterplot_div")
     .select("svg")
     .attr("width", width + margin.right + margin.left)
     .attr("height", height + margin.top + margin.bottom)
     .attr("transform", "translate(" + margin.left + ", " + margin.bottom + ")")
-    .attr("class", "violin");
+    .attr("class", "contour_scatterplot");
 
   const n = 1000;
   const n2 = 500;
@@ -98,7 +98,6 @@
 
   // curve-interpolated convex hull
   contourDensityValuesAlter.forEach((polygons, i) => {
-    const polygonList = polygons.coordinates.flat();
     const eachPolygon = polygons.coordinates
       .filter((points) => points.length > 5);
 
@@ -167,7 +166,6 @@
           })
         );
     });
-
   });
 
   const circles = svg.append("g")
