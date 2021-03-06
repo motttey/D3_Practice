@@ -99,70 +99,75 @@
   // curve-interpolated convex hull
   contourDensityValuesAlter.forEach((polygons, i) => {
     const polygonList = polygons.coordinates.flat();
+    const eachPolygon = polygons.coordinates
+      .filter((points) => points.length > 5);
 
-    const polygon = svg.insert("g")
-      .attr("class", "polygon")
-      .attr("stroke", "none")
-      .attr("stroke-width", "0.0")
-      .selectAll("path")
-      .data(polygonList)
-      .enter()
-      .append("path")
-      .attr("class", "polygon" + i.toString())
-      .attr("fill", color(polygons.value))
-      .attr("d", (d) => {
-        return interpolate(polygonList);
-      })
-      .attr("opacity", "0.1")
-      .on("click", (_, p) => {
-        const filtered = data
-          .map((d) => [xScale(d["x"]), yScale(d["y"])])
-          .filter((d) => d3.polygonContains(p, d));
-
-        // show data in selected polygon
-        svg.append("g")
-          .selectAll(".selected-node")
-          .data(filtered)
-          .enter()
-          .append("circle")
-            .attr("cx", function(d){
-              return d[0];
-            })
-            .attr("cy", function(d){
-              return d[1];
-            })
-            .attr("r", 2)
-            .style("fill", "red")
-            .attr("stroke", "white");
-      });
-
-      polygon.call(d3.drag()
-        .on("start", (event, d) =>
-          polygon.attr("stroke", "black")
-        )
-        .on("drag", (event, d) => {
-          polygon.attr("transform", (d) =>
-            "translate("
-              +[ event.x - width/2, (event.y - height/2)]
-              + ")" )
+    eachPolygon.forEach((polygon) => {
+      const polygonGroup = svg.insert("g")
+        .attr("class", "polygon")
+        .attr("stroke", "none")
+        .attr("stroke-width", "0.0")
+        .selectAll("path")
+        .data(polygon)
+        .enter()
+        .append("path")
+        .attr("class", "polygon" + i.toString())
+        .attr("fill", color(polygons.value))
+        .attr("d", (d) => {
+          return interpolate(polygon);
         })
-        .on("end", (event, d) => {
-          polygon.attr("stroke", null);
+        .attr("opacity", "0.05")
+        .on("click", (_, p) => {
+          const filtered = data
+            .map((d) => [xScale(d["x"]), yScale(d["y"])])
+            .filter((d) => d3.polygonContains(p, d));
 
-          const filtered = d3.selectAll("circle")
-            .filter((c) => {
-              return d3.polygonContains(polygonList,
-                [xScale(c["x"]), yScale(c["y"])]);
-            });
+          // show data in selected polygon
+          svg.append("g")
+            .selectAll(".selected-node")
+            .data(filtered)
+            .enter()
+            .append("circle")
+              .attr("cx", function(d){
+                return d[0];
+              })
+              .attr("cy", function(d){
+                return d[1];
+              })
+              .attr("r", 2)
+              .style("fill", "red")
+              .attr("stroke", "white");
+        });
 
-          filtered
-            .transition(1000)
-            .attr("transform", (d) =>
+        polygonGroup.call(d3.drag()
+          .on("start", (event, d) =>
+            polygonGroup.attr("stroke", "black")
+          )
+          .on("drag", (event, d) => {
+            polygonGroup.attr("transform", (d) =>
               "translate("
                 +[ event.x - width/2, (event.y - height/2)]
-                + ")" );
-        })
-      );
+                + ")" )
+          })
+          .on("end", (event, d) => {
+            polygonGroup.attr("stroke", null);
+
+            const filtered = d3.selectAll("circle")
+              .filter((c) => {
+                return d3.polygonContains(polygon,
+                  [xScale(c["x"]), yScale(c["y"])]);
+              });
+
+            filtered
+              .transition(1000)
+              .attr("transform", (d) =>
+                "translate("
+                  +[ event.x - width/2, (event.y - height/2)]
+                  + ")" );
+          })
+        );
+    });
+
   });
 
   const circles = svg.append("g")
