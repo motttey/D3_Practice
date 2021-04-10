@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Streamgraph</title>
+  </head>
+  <body>
+    <h1>D3 Streamgraph</h1>
+    <div id="streamgraph_div">
+      <svg id="streamgraph"></svg>
+    </div>
+  </body>
+
+  <style>
+  </style>
+
+  <script>
+    const margin = {top: 20, right: 30, bottom: 30, left: 60},
+        width = 900 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var svg = d3.select("#streamgraph_div")
+      .select("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/5_OneCatSevNumOrdered_wide.csv")
+    .then((data) => {
+      console.log(data);
+      const keys = data.columns.slice(1)
+
+      const xScale = d3.scaleLinear()
+        .domain(d3.extent(data, (d) => d["year"]))
+        .range([ 0, width ]);
+
+      svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(xScale).ticks(5));
+
+      const yScale = d3.scaleLinear()
+        .domain([-100000, 100000])
+        .range([ height, 0 ]);
+      svg.append("g")
+        .call(d3.axisLeft(yScale));
+
+      const stackedData = d3.stack()
+        .offset(d3.stackOffsetSilhouette)
+        .keys(keys)(data)
+
+      svg
+        .selectAll("mylayers")
+        .data(stackedData)
+        .enter()
+        .append("path")
+          .style("fill", (d) => {
+            return d3.schemePastel1[keys.indexOf(d.key)];
+          })
+          .style("stroke", "black")
+          .style("stroke-width", 0.5)
+          .attr("d", d3.area()
+            .x(function(d, i) { return xScale(d.data.year); })
+            .y0(function(d) { return yScale(d[0]); })
+            .y1(function(d) { return yScale(d[1]); })
+          )
+    });
+  </script>
+</html>
