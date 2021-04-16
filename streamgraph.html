@@ -20,7 +20,7 @@
         width = 900 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
-    var svg = d3.select("#streamgraph_div")
+    const svg = d3.select("#streamgraph_div")
       .select("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -28,6 +28,78 @@
         .attr("transform",
               "translate(" + margin.left + "," + margin.top + ")");
 
+    const getCurrentPatientsNum = (areaObj, indices) => {
+      return areaObj.filter((v,i) => indices.indexOf(i) > 0)
+        .map((v) => v["ncurrentpatients"])
+        .reduce((acc, v) => acc + v);
+    };
+
+    d3.json("https://raw.githubusercontent.com/code4sabae/covid19/master/data/covid19japan-all.json")
+      .then((data) => {
+        const timeSeries = data.map((d) => {
+          return {
+            "lastUpdate": d["lastUpdate"],
+            "北海道・東北": getCurrentPatientsNum(d["area"], [0, 1, 2, 3, 4, 5, 6]),
+            "関東": getCurrentPatientsNum(d["area"], [6, 7, 8, 9, 10, 11, 12, 13]),
+            "甲信越・北陸": getCurrentPatientsNum(d["area"], [14, 15, 16, 17, 18,  19]),
+            "東海": getCurrentPatientsNum(d["area"], [20, 21, 22, 23]),
+            "近畿": getCurrentPatientsNum(d["area"], [24, 25, 26, 27, 28, 29]),
+            "中国・四国": getCurrentPatientsNum(d["area"], [30, 31, 32, 33, 34, 35, 36, 37, 38]),
+            "九州・沖縄": getCurrentPatientsNum(d["area"], [39, 40, 41, 42, 43, 44, 45, 46]),
+
+          }
+        });
+
+        const keys = Object.keys(timeSeries[0]).slice(1);
+        console.log(keys);
+
+        console.log(data);
+
+        const xScale = d3.scaleLinear()
+          .domain(d3.extent(timeSeries, (d, i) => i))
+          .range([ 0, width ]);
+
+        svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(xScale).ticks(5));
+
+        const yScale = d3.scaleLinear()
+          .domain([-40000, 40000])
+          .range([ height, 0 ]);
+
+        svg.append("g")
+          .call(d3.axisLeft(yScale));
+
+        const stackedData = d3.stack()
+          .offset(d3.stackOffsetSilhouette)
+          .keys(keys)(timeSeries)
+
+        console.log(stackedData);
+
+        svg
+          .selectAll("mylayers")
+          .data(stackedData)
+          .enter()
+          .append("path")
+            .style("fill", (d) => {
+              return d3.schemePastel1[keys.indexOf(d.key)];
+            })
+            .style("stroke", "black")
+            .style("stroke-width", 0.5)
+            .attr("d", d3.area()
+              .x(function(d, i) {
+                return xScale(i);
+              })
+              .y0(function(d) {
+                return yScale(d[0]);
+              })
+              .y1(function(d) {
+                return yScale(d[1]);
+              })
+            );
+      });
+
+    /*
     d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/5_OneCatSevNumOrdered_wide.csv")
     .then((data) => {
       console.log(data);
@@ -51,6 +123,8 @@
         .offset(d3.stackOffsetSilhouette)
         .keys(keys)(data)
 
+      console.log(stackedData);
+
       svg
         .selectAll("mylayers")
         .data(stackedData)
@@ -67,5 +141,6 @@
             .y1(function(d) { return yScale(d[1]); })
           )
     });
+    */
   </script>
 </html>
