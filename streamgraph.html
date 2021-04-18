@@ -60,13 +60,13 @@
           })
           .reduce((a, b) => a > b ? a : b );
 
-        const xScale = d3.scaleLinear()
-          .domain(d3.extent(timeSeries, (d, i) => i))
+        const xScale = d3.scaleTime()
+          .domain(d3.extent(timeSeries, (d) => new Date(d["lastUpdate"])))
           .range([ 0, width ]);
 
         svg.append("g")
           .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(xScale).ticks(5));
+          .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%b")));
 
         const yScale = d3.scaleLinear()
           .domain([-patientMax/2, patientMax/2])
@@ -90,7 +90,9 @@
             .style("stroke", "black")
             .style("stroke-width", 0.5)
             .attr("d", d3.area()
-              .x((d, i) => xScale(i))
+              .x((d) => {
+                return xScale(new Date(d.data["lastUpdate"]));
+              })
               .y0((d) => yScale(d[0]))
               .y1((d) => yScale(d[1]))
             );
