@@ -46,13 +46,10 @@
             "近畿": getCurrentPatientsNum(d["area"], [24, 25, 26, 27, 28, 29]),
             "中国・四国": getCurrentPatientsNum(d["area"], [30, 31, 32, 33, 34, 35, 36, 37, 38]),
             "九州・沖縄": getCurrentPatientsNum(d["area"], [39, 40, 41, 42, 43, 44, 45, 46]),
-
           }
         });
 
         const keys = Object.keys(timeSeries[0]).slice(1);
-        console.log(keys);
-
         console.log(data);
 
         const xScale = d3.scaleLinear()
@@ -81,21 +78,13 @@
           .data(stackedData)
           .enter()
           .append("path")
-            .style("fill", (d) => {
-              return d3.schemePastel1[keys.indexOf(d.key)];
-            })
+            .style("fill", (d) => d3.schemePastel1[keys.indexOf(d.key)])
             .style("stroke", "black")
             .style("stroke-width", 0.5)
             .attr("d", d3.area()
-              .x(function(d, i) {
-                return xScale(i);
-              })
-              .y0(function(d) {
-                return yScale(d[0]);
-              })
-              .y1(function(d) {
-                return yScale(d[1]);
-              })
+              .x((d, i) => xScale(i))
+              .y0((d) => yScale(d[0]))
+              .y1((d) => yScale(d[1]))
             );
       });
 
