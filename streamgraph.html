@@ -58,7 +58,7 @@
               .map((d) => d[1])
               .reduce((prev, cur) => prev + cur);
           })
-          .reduce((a, b) => a > b ? a : b );
+          .reduce((a, b) => a > b ? a : b);
 
         const xScale = d3.scaleTime()
           .domain(d3.extent(timeSeries, (d) => new Date(d["lastUpdate"])))
@@ -79,8 +79,6 @@
           .offset(d3.stackOffsetSilhouette)
           .keys(keys)(timeSeries)
 
-        console.log(stackedData);
-
         svg
           .selectAll("mylayers")
           .data(stackedData)
@@ -97,49 +95,5 @@
               .y1((d) => yScale(d[1]))
             );
       });
-
-    /*
-    d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/5_OneCatSevNumOrdered_wide.csv")
-    .then((data) => {
-      console.log(data);
-      const keys = data.columns.slice(1)
-
-      const xScale = d3.scaleLinear()
-        .domain(d3.extent(data, (d) => d["year"]))
-        .range([ 0, width ]);
-
-      svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(xScale).ticks(5));
-
-      const yScale = d3.scaleLinear()
-        .domain([-100000, 100000])
-        .range([ height, 0 ]);
-      svg.append("g")
-        .call(d3.axisLeft(yScale));
-
-      const stackedData = d3.stack()
-        .offset(d3.stackOffsetSilhouette)
-        .keys(keys)(data)
-
-      console.log(stackedData);
-
-      svg
-        .selectAll("mylayers")
-        .data(stackedData)
-        .enter()
-        .append("path")
-          .style("fill", (d) => {
-            return d3.schemePastel1[keys.indexOf(d.key)];
-          })
-          .style("stroke", "black")
-          .style("stroke-width", 0.5)
-          .attr("d", d3.area()
-            .x(function(d, i) { return xScale(d.data.year); })
-            .y0(function(d) { return yScale(d[0]); })
-            .y1(function(d) { return yScale(d[1]); })
-          )
-    });
-    */
   </script>
 </html>
