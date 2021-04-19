@@ -16,7 +16,7 @@
   </style>
 
   <script>
-    const margin = {top: 20, right: 30, bottom: 30, left: 60},
+    const margin = {top: 20, right: 150, bottom: 30, left: 60},
         width = 900 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
@@ -28,28 +28,58 @@
         .attr("transform",
               "translate(" + margin.left + "," + margin.top + ")");
 
+    const labelGroup = svg
+      .append("g")
+      .attr("class", "label");
+
     const getCurrentPatientsNum = (areaObj, indices) => {
       return areaObj.filter((v,i) => indices.indexOf(i) > 0)
         .map((v) => v["ncurrentpatients"])
         .reduce((acc, v) => acc + v);
     };
 
+    const createLegends = (labels) => {
+      labelGroup.selectAll(".labelDots")
+        .data(labels)
+        .enter()
+        .append("circle")
+          .attr("cx", width + margin.left/2)
+          .attr("cy", (d,i) => margin.top + i * 20)
+          .attr("class", "labelDots")
+          .attr("r", 7)
+          .style("fill", (d) => d3.schemePastel1[labels.indexOf(d)]);
+
+      labelGroup.selectAll(".labelText")
+        .data(labels)
+        .enter()
+        .append("text")
+          .attr("x", width + margin.left/2 + 10)
+          .attr("y", (d,i) => margin.top + i * 20)
+          .attr("class", "labelText")
+          .style("fill", "gray")
+          .text((d) => d)
+          .attr("text-anchor", "left")
+          .style("alignment-baseline", "middle");
+    }
+
     d3.json("https://raw.githubusercontent.com/code4sabae/covid19/master/data/covid19japan-all.json")
       .then((data) => {
         const timeSeries = data.map((d) => {
           return {
             "lastUpdate": d["lastUpdate"],
-            "北海道・東北": getCurrentPatientsNum(d["area"], [0, 1, 2, 3, 4, 5, 6]),
-            "関東": getCurrentPatientsNum(d["area"], [6, 7, 8, 9, 10, 11, 12, 13]),
-            "甲信越・北陸": getCurrentPatientsNum(d["area"], [14, 15, 16, 17, 18,  19]),
             "東海": getCurrentPatientsNum(d["area"], [20, 21, 22, 23]),
+            "関東": getCurrentPatientsNum(d["area"], [6, 7, 8, 9, 10, 11, 12, 13]),
             "近畿": getCurrentPatientsNum(d["area"], [24, 25, 26, 27, 28, 29]),
+            "北海道・東北": getCurrentPatientsNum(d["area"], [0, 1, 2, 3, 4, 5, 6]),
+            "甲信越・北陸": getCurrentPatientsNum(d["area"], [14, 15, 16, 17, 18,  19]),
             "中国・四国": getCurrentPatientsNum(d["area"], [30, 31, 32, 33, 34, 35, 36, 37, 38]),
             "九州・沖縄": getCurrentPatientsNum(d["area"], [39, 40, 41, 42, 43, 44, 45, 46]),
           }
         });
 
         const keys = Object.keys(timeSeries[0]).slice(1);
+        createLegends(keys);
+
         console.log(data);
 
         const patientMax = timeSeries.map((d) => {
