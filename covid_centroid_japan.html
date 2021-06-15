@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Interactive Map</title>
+  </head>
+  <body>
+    <div id="map_div">
+      <svg id="map"></svg>
+    </div>
+  </body>
+</html>
+
+<script>
+
+const width = 900;
+const height = 600;
+const bar_height = 400;
+
+const centerPos = [137.0, 36.0]; // 地図のセンター位置
+const scale = 1000; // 地図のスケール
+
+const margin = 50;
+
+// SVG要素を追加
+const svg = d3
+  .select("#map_div")
+  .select("svg")
+  .attr("width", width)
+  .attr("height", height)
+  .attr("class", "map");
+
+function getProjectionPath(magnify, centroid) {
+  // 地図の投影設定
+  const projection = d3
+    .geoMercator()
+    .center(centroid)
+    .translate([width / 2, height / 2])
+    .scale(scale * Math.sqrt(magnify));
+
+  // 地図をpathに投影(変換)
+  return d3.geoPath().projection(projection);
+};
+
+let render_line = d3.line()
+  .x(function(d) {
+    return d[0];
+  })
+  .y(function(d) {
+    return d[1];
+  });
+
+setUpData();
+
+async function setUpData() {
+  const map = await d3.json("https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson");
+  map.features.sort((a, b) => a.properties.id - b.properties.id);
+
+  const prefCentroid = map.features.map((p) => {
+    const coordinates = p.geometry.coordinates.reduce(
+      (a,b) =>  (a[0].length === Math.max(a[0].length, b[0].length))? a: b
+    );
+    return (coordinates.length > 1)? d3.polygonCentroid(coordinates): d3.polygonCentroid(coordinates[0]);
+  });
+
+  console.log(prefCentroid);
+
+  svg
+    .append("g")
+    .attr("transform", "translate(" + (0) + "," + (0) + ")")
+    .selectAll("path")
+      .data(map.features)
+      .enter()
+      .append("path")
+      .attr("d", getProjectionPath(1, centerPos))
+      .attr("class", "pref")
+      .style("stroke", "gray")
+      .style("stroke-width", 0.5)
+      .style("fill", "none");
+}
+</script>
