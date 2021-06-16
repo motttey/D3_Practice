@@ -33,20 +33,14 @@ const svg = d3
   .attr("height", height)
   .attr("class", "map");
 
-function getProjectionPath(magnify, centroid) {
-  // 地図の投影設定
-  const projection = d3
-    .geoMercator()
-    .center(centroid)
-    .translate([width / 2, height / 2])
-    .scale(scale * Math.sqrt(magnify));
-
-  // 地図をpathに投影(変換)
-  return d3.geoPath().projection(projection);
-};
+const projection = d3
+  .geoMercator()
+  .center(centerPos)
+  .translate([width / 2, height / 2])
+  .scale(scale);
 
 const calcCentroid = (d, idx) =>
-  d.map((pref) => pref.centroid[idx] * pref.npatients)
+  d.map((pref) => pref.centroid[idx] * Math.pow(pref.npatients, 2))
     .reduce((prev,cur) => prev + cur, 0);
 
 let render_line = d3.line()
@@ -86,13 +80,15 @@ async function setUpData() {
   }).slice(1);;
 
   const centroidOfCovid = covidData.map((d) => {
-      const sumCentroidX = calcCentroid(d, 0);
-      const sumCentroidY = calcCentroid(d, 1);
-      const npatients = d.map((pref) => pref.npatients)
-        .reduce((prev,cur) => prev + cur, 0);
+    const sumCentroidX = calcCentroid(d, 0);
+    const sumCentroidY = calcCentroid(d, 1);
+    const npatients = d.map((pref) => Math.pow(pref.npatients, 2))
+      .reduce((prev,cur) => prev + cur, 0);
 
-      return [ sumCentroidX/npatients, sumCentroidY/npatients ];
-    });
+    return projection(
+      [ sumCentroidX/npatients, sumCentroidY/npatients ]
+    );
+  });
 
   console.log(centroidOfCovid);
 
@@ -103,10 +99,24 @@ async function setUpData() {
       .data(map.features)
       .enter()
       .append("path")
-      .attr("d", getProjectionPath(1, centerPos))
+      .attr("d", d3.geoPath().projection(projection))
       .attr("class", "pref")
       .style("stroke", "gray")
       .style("stroke-width", 0.5)
       .style("fill", "none");
+
+  const line = d3.line()
+    .x((d) => { return d[0] })
+    .y((d) => { return d[1] });
+
+  svg
+    .append("g")
+    .attr("transform", "translate(" + (0) + "," + (0) + ")")
+      .append("path")
+      .datum(centroidOfCovid)
+      .attr("fill", "none")
+      .attr("stroke", "red")
+      .attr("stroke-width", 0.5)
+      .attr("d", line);
 }
 </script>
