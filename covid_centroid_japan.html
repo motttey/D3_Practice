@@ -13,17 +13,14 @@
 </html>
 
 <script>
-
 const width = 900;
 const height = 600;
-const bar_height = 400;
 
 const centerPos = [137.0, 36.0]; // 地図のセンター位置
 const scale = 1000; // 地図のスケール
 
 const margin = 50;
-
-const maxLength = 50;
+const maxLength = 150;
 
 // SVG要素を追加
 const svg = d3
@@ -39,9 +36,12 @@ const projection = d3
   .translate([width / 2, height / 2])
   .scale(scale);
 
-const calcCentroid = (d, idx) =>
-  d.map((pref) => pref.centroid[idx] * Math.pow(pref.npatients, 2))
+const calcCentroid = (d, idx, key) =>
+  d.map((pref) => pref.centroid[idx] * pref[key])
     .reduce((prev,cur) => prev + cur, 0);
+
+const calcSum = (d, key) => d.map((pref) => pref[key])
+  .reduce((prev,cur) => prev + cur, 0);
 
 let render_line = d3.line()
   .x(function(d) {
@@ -74,19 +74,19 @@ async function setUpData() {
       const prefPrevArray = (i > 0)? arr[i - 1].area[idx]: prefCurArray;
       return {
         centroid: centroid,
-        npatients: prefCurArray["npatients"] - prefPrevArray["npatients"]
+        npatients: prefCurArray["npatients"] - prefPrevArray["npatients"],
+        ndeaths: prefCurArray["ndeaths"] - prefPrevArray["ndeaths"],
       };
     })
   }).slice(1);;
 
+  const key = "ndeaths";
   const centroidOfCovid = covidData.map((d) => {
-    const sumCentroidX = calcCentroid(d, 0);
-    const sumCentroidY = calcCentroid(d, 1);
-    const npatients = d.map((pref) => Math.pow(pref.npatients, 2))
-      .reduce((prev,cur) => prev + cur, 0);
-
+    const sumCentroidX = calcCentroid(d, 0, key);
+    const sumCentroidY = calcCentroid(d, 1, key);
+    const sumKey = calcSum(d, key);
     return projection(
-      [ sumCentroidX/npatients, sumCentroidY/npatients ]
+      [ sumCentroidX/sumKey, sumCentroidY/sumKey ]
     );
   });
 
@@ -106,6 +106,7 @@ async function setUpData() {
       .style("fill", "none");
 
   const line = d3.line()
+    .curve (d3.curveCatmullRomClosed)
     .x((d) => { return d[0] })
     .y((d) => { return d[1] });
 
