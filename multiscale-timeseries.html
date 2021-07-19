@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Multi-Scale Line Chart</title>
+  </head>
+  <body>
+    <div id="chart_div">
+      <svg id="chart"></svg>
+    </div>
+  </body>
+</html>
+
+<script type="text/javascript">
+  let data = [];
+  const logScales = [ 2, 3, 4, 5, 6 ];
+  // length of series
+  const t = 12;
+  const n = 20;
+
+  for (let i = 0; i < n; i++) {
+    const scale = logScales[i % logScales.length];
+    const seed = Math.random() * Math.pow(10, scale);
+    const eachTimeSeries = [];
+    for (let i = 0; i < n; i++) {
+      eachTimeSeries.push(Math.floor(seed + (Math.random() - 0.5) * Math.pow(10, scale - 1)));
+    }
+    data.push(eachTimeSeries);
+  }
+
+  const chart_height = 300;
+  const chart_width = 600;
+  const margin = { top: 25, right: 25, bottom: 25, left: 25 };
+
+  const overall_height = (chart_height + margin.top + margin.bottom) * logScales.length;
+  console.log(data);
+</script>
