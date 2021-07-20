@@ -23,7 +23,7 @@
     const scale = logScales[i % logScales.length];
     const seed = Math.random() * Math.pow(10, scale);
     const eachTimeSeries = [];
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < t; i++) {
       eachTimeSeries.push(Math.floor(seed + (Math.random() - 0.5) * Math.pow(10, scale - 1)));
     }
     data.push(eachTimeSeries);
@@ -31,8 +31,52 @@
 
   const chart_height = 300;
   const chart_width = 600;
-  const margin = { top: 25, right: 25, bottom: 25, left: 25 };
+  const margin = { top: 25, right: 50, bottom: 25, left: 50 };
 
   const overall_height = (chart_height + margin.top + margin.bottom) * logScales.length;
-  console.log(data);
+
+  /*
+  data.forEach((arr, i) => {
+    // console.log(d3.mean(arr));
+    const logScale = Math.round(Math.log(d3.mean(arr)) / Math.log(10));
+  });
+  */
+
+  // SVG要素を追加
+  const svg = d3
+    .select("#chart_div")
+    .select("svg")
+    .attr("width", chart_width)
+    .attr("height", chart_height * logScales.length)
+    .attr("class", "map");
+
+  const xScale = d3.scaleLinear()
+    .domain([0, t - 1])
+    .range([margin.left, chart_width - margin.right]);
+
+  const yScale = d3.scaleLinear()
+    .domain([0, d3.max(data.map((arr) => d3.max(arr)))])
+    .range([chart_height, margin.left]);
+
+  svg.append("g")
+    .attr("transform", "translate(" + 0 + "," + chart_height + ")")
+    .call(d3.axisBottom(xScale));
+
+  svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + 0 + ")")
+    .call(d3.axisLeft(yScale));
+
+  const line = d3.line()
+    .x((_, i) => xScale(i))
+    .y((d) => yScale(d));
+
+  data.forEach((arr, idx) => {
+    console.log(arr);
+    svg.append("path")
+      .datum(arr)
+      .attr("fill", "none")
+      .attr("stroke", d3.interpolateRainbow(idx/n))
+      .attr("stroke-width", 1)
+      .attr("d", line);
+  });
 </script>
