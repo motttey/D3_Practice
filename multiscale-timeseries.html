@@ -29,54 +29,56 @@
     data.push(eachTimeSeries);
   }
 
-  const chart_height = 300;
+  const chart_height = 200;
   const chart_width = 600;
-  const margin = { top: 25, right: 50, bottom: 25, left: 50 };
+  const margin = { top: 25, right: 50, bottom: 50, left: 50 };
 
   const overall_height = (chart_height + margin.top + margin.bottom) * logScales.length;
-
-  /*
-  data.forEach((arr, i) => {
-    // console.log(d3.mean(arr));
-    const logScale = Math.round(Math.log(d3.mean(arr)) / Math.log(10));
-  });
-  */
 
   // SVG要素を追加
   const svg = d3
     .select("#chart_div")
     .select("svg")
     .attr("width", chart_width)
-    .attr("height", chart_height * logScales.length)
+    .attr("height", chart_height * logScales.length + margin.bottom)
     .attr("class", "map");
 
   const xScale = d3.scaleLinear()
     .domain([0, t - 1])
     .range([margin.left, chart_width - margin.right]);
 
-  const yScale = d3.scaleLinear()
-    .domain([0, d3.max(data.map((arr) => d3.max(arr)))])
-    .range([chart_height, margin.left]);
+  const log10 = (arr) => Math.round(Math.log(d3.mean(arr)) / Math.log(10));
 
-  svg.append("g")
-    .attr("transform", "translate(" + 0 + "," + chart_height + ")")
-    .call(d3.axisBottom(xScale));
+  logScales.forEach((logValue, logIndex) => {
+    // console.log(d3.mean(arr));
+    const g = svg.append("g")
+      .attr("id", "log" + logValue);
 
-  svg.append("g")
-    .attr("transform", "translate(" + margin.left + "," + 0 + ")")
-    .call(d3.axisLeft(yScale));
+    const logData = data.filter((d) => logValue === log10(d));
 
-  const line = d3.line()
-    .x((_, i) => xScale(i))
-    .y((d) => yScale(d));
+    const yScale = d3.scaleLinear()
+      .domain([0, d3.max(logData.map((arr) => d3.max(arr)))])
+      .range([chart_height * (logIndex+1), chart_height * logIndex + margin.bottom]);
 
-  data.forEach((arr, idx) => {
-    console.log(arr);
-    svg.append("path")
-      .datum(arr)
-      .attr("fill", "none")
-      .attr("stroke", d3.interpolateRainbow(idx/n))
-      .attr("stroke-width", 1)
-      .attr("d", line);
+    svg.append("g")
+      .attr("transform", "translate(" + 0 + "," + chart_height * (logIndex + 1) + ")")
+      .call(d3.axisBottom(xScale));
+
+    svg.append("g")
+      .attr("transform", "translate(" + margin.left + "," + 0 + ")")
+      .call(d3.axisLeft(yScale));
+
+    const line = d3.line()
+      .x((_, i) => xScale(i))
+      .y((d) => yScale(d));
+
+    logData.forEach((arr, idx) => {
+      svg.append("path")
+        .datum(arr)
+        .attr("fill", "none")
+        .attr("stroke", d3.interpolateRainbow(data.indexOf(arr)/n))
+        .attr("stroke-width", 1)
+        .attr("d", line);
+    });
   });
 </script>
