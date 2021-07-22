@@ -49,36 +49,59 @@
 
   const log10 = (arr) => Math.round(Math.log(d3.mean(arr)) / Math.log(10));
 
-  logScales.forEach((logValue, logIndex) => {
+  const databyLogs = logScales.map((scale) => {
+    return data.filter((d) => scale === log10(d));
+  })
+
+  console.log(databyLogs);
+
+  databyLogs.forEach((logData, logIndex) => {
     // console.log(d3.mean(arr));
     const g = svg.append("g")
-      .attr("id", "log" + logValue);
-
-    const logData = data.filter((d) => logValue === log10(d));
+      .attr("id", "log" + logIndex);
 
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(logData.map((arr) => d3.max(arr)))])
       .range([chart_height * (logIndex+1), chart_height * logIndex + margin.bottom]);
-
-    svg.append("g")
-      .attr("transform", "translate(" + 0 + "," + chart_height * (logIndex + 1) + ")")
-      .call(d3.axisBottom(xScale));
-
-    svg.append("g")
-      .attr("transform", "translate(" + margin.left + "," + 0 + ")")
-      .call(d3.axisLeft(yScale));
 
     const line = d3.line()
       .x((_, i) => xScale(i))
       .y((d) => yScale(d));
 
     logData.forEach((arr, idx) => {
-      svg.append("path")
+      g.append("path")
         .datum(arr)
         .attr("fill", "none")
         .attr("stroke", d3.interpolateRainbow(data.indexOf(arr)/n))
         .attr("stroke-width", 1)
         .attr("d", line);
     });
+
+    // 下のスケールの最大値をプロット
+    if (logIndex !== 0) {
+      const minNextLog = databyLogs[logIndex - 1]
+        .sort((a, b) => d3.mean(b) - d3.mean(a))[0];
+      console.log(minNextLog);
+
+      const area = d3.area()
+        .x((_, i) => xScale(i))
+        .y1((d) => yScale(d))
+        .y0(yScale(0));
+
+      g.append("path")
+        .datum(minNextLog)
+        .attr("fill", d3.interpolateRainbow(data.indexOf(minNextLog)/n))
+        .attr("stroke", d3.interpolateRainbow(data.indexOf(minNextLog)/n))
+        .attr("stroke-width", 1)
+        .attr("d", area);
+    }
+    
+    g.append("g")
+      .attr("transform", "translate(" + 0 + "," + chart_height * (logIndex + 1) + ")")
+      .call(d3.axisBottom(xScale));
+
+    g.append("g")
+      .attr("transform", "translate(" + margin.left + "," + 0 + ")")
+      .call(d3.axisLeft(yScale));
   });
 </script>
