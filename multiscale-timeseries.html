@@ -88,14 +88,29 @@
         .y1((d) => yScale(d))
         .y0(yScale(0));
 
+      const minValColor = d3.interpolateRainbow(data.indexOf(minNextLog)/n);
       g.append("path")
         .datum(minNextLog)
-        .attr("fill", d3.interpolateRainbow(data.indexOf(minNextLog)/n))
-        .attr("stroke", d3.interpolateRainbow(data.indexOf(minNextLog)/n))
+        .attr("fill", minValColor)
+        .attr("stroke", minValColor)
         .attr("stroke-width", 1)
         .attr("d", area);
+
+      const yScalePrev = d3.scaleLinear()
+        .domain([0, d3.max(databyLogs[logIndex - 1].map((arr) => d3.max(arr)))])
+        .range([chart_height * (logIndex), chart_height * (logIndex - 1) + margin.bottom]);
+
+      const index = (logIndex % 2 === 0)? 0: t-1;
+      const offset = 2;
+      g.append("line")
+        .attr("x1", xScale(index) + offset)
+        .attr("x2", xScale(index) + offset)
+        .attr("y1", yScale(minNextLog[index]))
+        .attr("y2", yScalePrev(minNextLog[index]))
+        .attr("stroke", minValColor)
+        .attr("stroke-width", 2);
     }
-    
+
     g.append("g")
       .attr("transform", "translate(" + 0 + "," + chart_height * (logIndex + 1) + ")")
       .call(d3.axisBottom(xScale));
