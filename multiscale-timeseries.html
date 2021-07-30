@@ -31,7 +31,7 @@
 
   const chart_height = 200;
   const chart_width = 600;
-  const margin = { top: 25, right: 50, bottom: 50, left: 50 };
+  const margin = { top: 25, right: 75, bottom: 50, left: 75 };
 
   const overall_height = (chart_height + margin.top + margin.bottom) * logScales.length;
 
@@ -73,7 +73,7 @@
         .datum(arr)
         .attr("fill", "none")
         .attr("stroke", d3.interpolateRainbow(data.indexOf(arr)/n))
-        .attr("stroke-width", 1)
+        .attr("stroke-width", 1.5)
         .attr("d", line);
     });
 
@@ -81,7 +81,6 @@
     if (logIndex !== 0) {
       const minNextLog = databyLogs[logIndex - 1]
         .sort((a, b) => d3.mean(b) - d3.mean(a))[0];
-      console.log(minNextLog);
 
       const area = d3.area()
         .x((_, i) => xScale(i))
@@ -100,15 +99,39 @@
         .domain([0, d3.max(databyLogs[logIndex - 1].map((arr) => d3.max(arr)))])
         .range([chart_height * (logIndex), chart_height * (logIndex - 1) + margin.bottom]);
 
-      const index = (logIndex % 2 === 0)? 0: t-1;
-      const offset = 2;
-      g.append("line")
-        .attr("x1", xScale(index) + offset)
-        .attr("x2", xScale(index) + offset)
-        .attr("y1", yScale(minNextLog[index]))
-        .attr("y2", yScalePrev(minNextLog[index]))
-        .attr("stroke", minValColor)
-        .attr("stroke-width", 2);
+      const index = t-1;
+      const offset = (logIndex % 2 === 0)? 5: 25;
+
+      const appendLine = (x1, x2, y1, y2) => {
+        g.append("line")
+          .attr("x1", x1)
+          .attr("x2", x2)
+          .attr("y1", y1)
+          .attr("y2", y2)
+          .attr("stroke", minValColor)
+          .attr("stroke-width", 1.5);
+      }
+
+      appendLine(
+        xScale(index) + offset,
+        xScale(index) + offset,
+        yScale(minNextLog[index]),
+        yScalePrev(minNextLog[index])
+      );
+
+      appendLine(
+        xScale(index),
+        xScale(index) + offset,
+        yScale(minNextLog[index]),
+        yScale(minNextLog[index])
+      );
+
+      appendLine(
+        xScale(index),
+        xScale(index) + offset,
+        yScalePrev(minNextLog[index]),
+        yScalePrev(minNextLog[index])
+      );
     }
 
     g.append("g")
