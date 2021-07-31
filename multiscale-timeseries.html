@@ -18,6 +18,8 @@
   // length of series
   const t = 12;
   const n = 20;
+  const lastIndex = t-1;
+  const offset = 20;
 
   for (let i = 0; i < n; i++) {
     const scale = logScales[i % logScales.length];
@@ -29,8 +31,8 @@
     data.push(eachTimeSeries);
   }
 
-  const chart_height = 200;
-  const chart_width = 600;
+  const chart_height = 250;
+  const chart_width = 800;
   const margin = { top: 25, right: 75, bottom: 50, left: 75 };
 
   const overall_height = (chart_height + margin.top + margin.bottom) * logScales.length;
@@ -57,8 +59,6 @@
     // console.log(d3.mean(arr));
     const g = svg.append("g")
       .attr("id", "log" + logIndex);
-
-    console.log(logData);
 
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(logData.map((arr) => d3.max(arr)))])
@@ -99,9 +99,6 @@
         .domain([0, d3.max(databyLogs[logIndex + 1].map((arr) => d3.max(arr)))])
         .range([chart_height * (logIndex + 2), chart_height * (logIndex + 1) + margin.bottom]);
 
-      const index = t-1;
-      const offset = 20;
-
       const appendLine = (x1, x2, y1, y2) => {
         g.append("line")
           .attr("x1", x1)
@@ -113,24 +110,24 @@
       }
 
       appendLine(
-        xScale(index) + offset,
-        xScale(index) + offset,
-        yScalePrev(minNextLog[index]),
-        yScale(minNextLog[index])
+        xScale(lastIndex) + offset,
+        xScale(lastIndex) + offset,
+        yScalePrev(minNextLog[lastIndex]),
+        yScale(minNextLog[lastIndex])
       );
 
       appendLine(
-        xScale(index),
-        xScale(index) + offset,
-        yScale(minNextLog[index]),
-        yScale(minNextLog[index])
+        xScale(lastIndex),
+        xScale(lastIndex) + offset,
+        yScale(minNextLog[lastIndex]),
+        yScale(minNextLog[lastIndex])
       );
 
       appendLine(
-        xScale(index),
-        xScale(index) + offset,
-        yScalePrev(minNextLog[index]),
-        yScalePrev(minNextLog[index])
+        xScale(lastIndex),
+        xScale(lastIndex) + offset,
+        yScalePrev(minNextLog[lastIndex]),
+        yScalePrev(minNextLog[lastIndex])
       );
     }
 
