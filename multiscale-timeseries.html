@@ -14,7 +14,7 @@
 
 <script type="text/javascript">
   let data = [];
-  const logScales = [ 2, 3, 4, 5, 6 ];
+  const logScales = [ 2, 3, 4, 5, 6 ].reverse();
   // length of series
   const t = 12;
   const n = 20;
@@ -53,12 +53,12 @@
     return data.filter((d) => scale === log10(d));
   })
 
-  console.log(databyLogs);
-
   databyLogs.forEach((logData, logIndex) => {
     // console.log(d3.mean(arr));
     const g = svg.append("g")
       .attr("id", "log" + logIndex);
+
+    console.log(logData);
 
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(logData.map((arr) => d3.max(arr)))])
@@ -78,8 +78,8 @@
     });
 
     // 下のスケールの最大値をプロット
-    if (logIndex !== 0) {
-      const minNextLog = databyLogs[logIndex - 1]
+    if (logIndex !== databyLogs.length - 1) {
+      const minNextLog = databyLogs[logIndex + 1]
         .sort((a, b) => d3.mean(b) - d3.mean(a))[0];
 
       const area = d3.area()
@@ -96,11 +96,11 @@
         .attr("d", area);
 
       const yScalePrev = d3.scaleLinear()
-        .domain([0, d3.max(databyLogs[logIndex - 1].map((arr) => d3.max(arr)))])
-        .range([chart_height * (logIndex), chart_height * (logIndex - 1) + margin.bottom]);
+        .domain([0, d3.max(databyLogs[logIndex + 1].map((arr) => d3.max(arr)))])
+        .range([chart_height * (logIndex + 2), chart_height * (logIndex + 1) + margin.bottom]);
 
       const index = t-1;
-      const offset = (logIndex % 2 === 0)? 5: 25;
+      const offset = 20;
 
       const appendLine = (x1, x2, y1, y2) => {
         g.append("line")
@@ -115,8 +115,8 @@
       appendLine(
         xScale(index) + offset,
         xScale(index) + offset,
-        yScale(minNextLog[index]),
-        yScalePrev(minNextLog[index])
+        yScalePrev(minNextLog[index]),
+        yScale(minNextLog[index])
       );
 
       appendLine(
