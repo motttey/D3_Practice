@@ -1,0 +1,5 @@
+# temporally files
+.DS_Store
+
+# json files
+/json
