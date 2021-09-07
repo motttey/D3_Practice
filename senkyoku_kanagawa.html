@@ -60,6 +60,11 @@
     async function setUpData() {
       const map = await d3.json("https://raw.githubusercontent.com/amay077/senkyoku289/master/senkyoku289polygon.geojson");
       // map.features.sort((a, b) => a.properties.id - b.properties.id);
+      console.log(map.features);
+
+      const senkyo = await d3.csv("csv/hr96-17.csv");
+      const senkyo_2017 = senkyo.filter((d) => d.year == "2017");
+      console.log(senkyo_2017);
 
       svg.selectAll("path")
         .data(map.features)
@@ -69,8 +74,14 @@
         .attr("class", "pref")
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
-        .style("fill", (d,i) => {
-          return "gray";
+        .style("fill", (d, i) => {
+          const pref_name = d.properties.kuname.split(new RegExp('[0-9]'))[0];
+          const first_cand = senkyo_2017
+            .filter((c) => c.pref ===  pref_name && c.kun == d.properties.ku.toString())
+            .reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
+
+          console.log(first_cand.seito.includes("自民"));
+          return (first_cand.seito.includes("自民"))? "salmon": "gray";
         });
     }
   </script>
