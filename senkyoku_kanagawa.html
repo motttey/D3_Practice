@@ -7,6 +7,7 @@
   </head>
   <body>
     <div id="map_div">
+      <h2>総投票数</h2>
       <svg id="map"></svg>
     </div>
     <div id="bar_chart_div">
@@ -62,9 +63,17 @@
       // map.features.sort((a, b) => a.properties.id - b.properties.id);
       console.log(map.features);
 
+      // http://www.ner.takushoku-u.ac.jp/masano/class_material/waseda/keiryo/R39_visualize_Election.html
+      // データはこちらからダウンロード
       const senkyo = await d3.csv("csv/hr96-17.csv");
       const senkyo_2017 = senkyo.filter((d) => d.year == "2017");
       console.log(senkyo_2017);
+
+      const total_tokuhyo = senkyo_2017.map((d) => parseInt(d.vote))
+        .reduce((a, b) => a + b);
+
+      d3.select('h2')
+        .text("総投票数: " + total_tokuhyo.toLocaleString());
 
       svg.selectAll("path")
         .data(map.features)
@@ -80,7 +89,6 @@
             .filter((c) => c.pref ===  pref_name && c.kun == d.properties.ku.toString())
             .reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
 
-          console.log(first_cand.seito.includes("自民"));
           return (first_cand.seito.includes("自民"))? "salmon": "gray";
         });
     }
