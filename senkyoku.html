@@ -75,6 +75,11 @@
       d3.select('h2')
         .text("総投票数: " + total_tokuhyo.toLocaleString());
 
+      // 政党の一覧
+      const seitoList = senkyo_2017.map((d) => d.seito)
+        .filter((d, i, self) => self.indexOf(d) === i);
+      console.log(seitoList);
+
       svg.selectAll("path")
         .data(map.features)
         .enter()
@@ -85,11 +90,28 @@
         .style("stroke-width", 0.25)
         .style("fill", (d, i) => {
           const pref_name = d.properties.kuname.split(new RegExp('[0-9]'))[0];
-          const first_cand = senkyo_2017
-            .filter((c) => c.pref ===  pref_name && c.kun == d.properties.ku.toString())
-            .reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
+          const target_data = senkyo_2017
+            .filter((c) => c.pref ===  pref_name && c.kun == d.properties.ku.toString());
 
-          return (first_cand.seito.includes("自民"))? "salmon": "gray";
+          const first_cand = target_data.reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
+
+          const yotouVote = target_data
+            .filter((c) => ["自民", "公明"].includes(c.seito))
+            .map((d) => parseInt(d.vote))
+            .reduce((a, b) => a + b, 0);
+
+          const yatouVote = target_data
+            .filter((c) => ["立憲民主", "希望の党", "共産", "社民"].includes(c.seito))
+            .map((d) => parseInt(d.vote))
+            .reduce((a, b) => a + b, 0);
+
+          const otherVote = target_data
+            .filter((c) => ["日本維新の会", "諸派"].includes(c.seito))
+            .map((d) => parseInt(d.vote))
+            .reduce((a, b) => a + b, 0);
+
+          return yotouVote > yatouVote && yotouVote > otherVote
+            ? "salmon": "gray";
         });
     }
   </script>
