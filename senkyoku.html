@@ -61,7 +61,6 @@
     async function setUpData() {
       const map = await d3.json("https://raw.githubusercontent.com/amay077/senkyoku289/master/senkyoku289polygon.geojson");
       // map.features.sort((a, b) => a.properties.id - b.properties.id);
-      console.log(map.features);
 
       // http://www.ner.takushoku-u.ac.jp/masano/class_material/waseda/keiryo/R39_visualize_Election.html
       // データはこちらからダウンロード
@@ -110,8 +109,15 @@
             .map((d) => parseInt(d.vote))
             .reduce((a, b) => a + b, 0);
 
-          return yotouVote > yatouVote && yotouVote > otherVote
-            ? "salmon": "gray";
+          if (yotouVote > yatouVote && yotouVote > otherVote) {
+            return "salmon";
+          }
+          else if (yatouVote > yotouVote && yatouVote > otherVote) {
+            return "cyan";
+          }
+          else {
+            return "gray";
+          }
         });
     }
   </script>
