@@ -6,12 +6,19 @@
     <title>D3 Interactive Map</title>
   </head>
   <body>
+    <div id="input_div">
+      <label for="yotou">与党</label>
+      <input name="yotou" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 0)">
+
+      <label for="yatou">野党</label>
+      <input name="yatou" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 1)">
+
+      <label for="other">その他</label>
+      <input name="other" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 2)">
+    </div>
     <div id="map_div">
       <h2>総投票数</h2>
       <svg id="map"></svg>
-    </div>
-    <div id="bar_chart_div">
-      <svg id="bar_chart"></svg>
     </div>
   </body>
 
@@ -45,6 +52,37 @@
       .translate([width / 2, height / 2])
       .scale(scale);
 
+    let yotouWeight = 1.0;
+    let yatouWeight = 1.0;
+    let otherWeight = 1.0;
+
+    let senkyo_2017_map = [];
+
+    const updateSlider = (val, key) => {
+      if (key === 0) yotouWeight = val;
+      else if (key === 1) yatouWeight = val;
+      else otherWeight = val;
+
+      svg.selectAll("path")
+        .style("stroke", "gray")
+        .style("stroke-width", 0.25)
+        .style("fill", (d, i) => {
+          const yotouVote = senkyo_2017_map[i].yotou_vote * yotouWeight;
+          const yatouVote = senkyo_2017_map[i].yatou_vote * yatouWeight;
+          const otherVote = senkyo_2017_map[i].other_vote * otherWeight;
+
+          if (yotouVote > yatouVote && yotouVote > otherVote) {
+            return "salmon";
+          }
+          else if (yatouVote > yotouVote && yatouVote > otherVote) {
+            return "cyan";
+          }
+          else {
+            return "gray";
+          }
+        });
+    }
+
     // 地図をpathに投影(変換)
     const path = d3.geoPath().projection(projection);
 
@@ -68,7 +106,7 @@
       const senkyo_2017 = senkyo.filter((d) => d.year == "2017");
       console.log(senkyo_2017);
 
-      const senkyo_2017_map = map.features.map((d) => {
+      senkyo_2017_map = map.features.map((d) => {
         const pref_name = d.properties.kuname.split(new RegExp('[0-9]'))[0];
         const target_data = senkyo_2017
           .filter((c) => c.pref ===  pref_name && c.kun == d.properties.ku.toString());
@@ -110,6 +148,7 @@
       // 政党の一覧
       const seitoList = senkyo_2017.map((d) => d.seito)
         .filter((d, i, self) => self.indexOf(d) === i);
+
       console.log(seitoList);
 
       svg.selectAll("path")
@@ -121,7 +160,7 @@
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
         .style("fill", (d, i) => {
-          const yotouVote = senkyo_2017_map[i].yotou_vote;
+          const yotouVote = senkyo_2017_map[i].yotou_vote * yotouWeight;
           const yatouVote = senkyo_2017_map[i].yatou_vote;
           const otherVote = senkyo_2017_map[i].other_vote;
 
