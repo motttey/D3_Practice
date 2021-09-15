@@ -16,6 +16,13 @@
       <label for="other">その他</label>
       <input name="other" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 2)">
     </div>
+    <div id="input_div">
+      <ul>
+        <li>与党: <span id="yotouWeightSpan">1.00</span></li>
+        <li>野党: <span id="yatouWeightSpan">1.00</span></li>
+        <li>その他: <span id="otherWeightSpan">1.00</span></li>
+      </ul>
+    </div>
     <div id="map_div">
       <h2>総投票数</h2>
       <svg id="map"></svg>
@@ -65,9 +72,16 @@
     }
 
     const updateSlider = (val, key) => {
-      if (key === 0) yotouWeight = val;
-      else if (key === 1) yatouWeight = val;
-      else otherWeight = val;
+      if (key === 0) {
+        yotouWeight = val;
+        d3.select("span#yotouWeightSpan").text(val);
+      } else if (key === 1) {
+        yatouWeight = val;
+        d3.select("span#yatouWeightSpan").text(val);
+      } else {
+        otherWeight = val;
+        d3.select("span#otherWeightSpan").text(val);
+      }
 
       svg.selectAll("path")
         .style("stroke", "gray")
@@ -91,6 +105,15 @@
       .attr("width", width)
       .attr("height", height)
       .attr("class", "map");
+
+    const zoom = d3.zoom()
+      .scaleExtent([1, 3])
+      .on('zoom', (e) => {
+        svg.selectAll('path')
+          .attr('transform', e.transform);
+      });
+
+    svg.call(zoom);
 
     setUpData();
 
