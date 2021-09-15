@@ -58,6 +58,12 @@
 
     let senkyo_2017_map = [];
 
+    const coloringMap = (yotouVote, yatouVote, otherVote) => {
+      if (yotouVote > yatouVote && yotouVote > otherVote) return "salmon";
+      else if (yatouVote > yotouVote && yatouVote > otherVote) return "cyan";
+      else return "gray";
+    }
+
     const updateSlider = (val, key) => {
       if (key === 0) yotouWeight = val;
       else if (key === 1) yatouWeight = val;
@@ -67,19 +73,11 @@
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
         .style("fill", (d, i) => {
-          const yotouVote = senkyo_2017_map[i].yotou_vote * yotouWeight;
-          const yatouVote = senkyo_2017_map[i].yatou_vote * yatouWeight;
-          const otherVote = senkyo_2017_map[i].other_vote * otherWeight;
-
-          if (yotouVote > yatouVote && yotouVote > otherVote) {
-            return "salmon";
-          }
-          else if (yatouVote > yotouVote && yatouVote > otherVote) {
-            return "cyan";
-          }
-          else {
-            return "gray";
-          }
+          return coloringMap(
+            senkyo_2017_map[i].yotou_vote * yotouWeight,
+            senkyo_2017_map[i].yatou_vote * yatouWeight,
+            senkyo_2017_map[i].other_vote * otherWeight
+          );
         });
     }
 
@@ -137,8 +135,6 @@
         });
       });
 
-      console.log(senkyo_2017_map[1]);
-
       const total_tokuhyo = senkyo_2017.map((d) => parseInt(d.vote))
         .reduce((a, b) => a + b);
 
@@ -159,20 +155,12 @@
         .attr("class", "pref")
         .style("stroke", "gray")
         .style("stroke-width", 0.25)
-        .style("fill", (d, i) => {
-          const yotouVote = senkyo_2017_map[i].yotou_vote * yotouWeight;
-          const yatouVote = senkyo_2017_map[i].yatou_vote;
-          const otherVote = senkyo_2017_map[i].other_vote;
-
-          if (yotouVote > yatouVote && yotouVote > otherVote) {
-            return "salmon";
-          }
-          else if (yatouVote > yotouVote && yatouVote > otherVote) {
-            return "cyan";
-          }
-          else {
-            return "gray";
-          }
+        .style("fill", (_, i) => {
+          return coloringMap(
+            senkyo_2017_map[i].yotou_vote,
+            senkyo_2017_map[i].yatou_vote,
+            senkyo_2017_map[i].other_vote
+          );
         });
     }
   </script>
