@@ -25,13 +25,6 @@
         <output name="result" for="other">1.00</output>
       </form>
     </div>
-    <div id="input_div">
-      <ul>
-        <li>与党: <span id="yotouWeightSpan">1.00</span></li>
-        <li>野党: <span id="yatouWeightSpan">1.00</span></li>
-        <li>その他: <span id="otherWeightSpan">1.00</span></li>
-      </ul>
-    </div>
     <div id="map_div">
       <h2>総投票数</h2>
       <svg id="map"></svg>
@@ -95,6 +88,15 @@
             senkyo_2017_map[i].other_vote * otherWeight
           );
         });
+
+      const total_tokuhyo = senkyo_2017_map.map((d) => {
+        return d.yotou_vote * yotouWeight
+          + d.yatou_vote * yatouWeight
+          + d.other_vote * otherWeight
+      }).reduce((a, b) => a + b);
+
+      d3.select('h2')
+        .text("総投票数: " + total_tokuhyo.toLocaleString());
     }
 
     // 地図をpathに投影(変換)
