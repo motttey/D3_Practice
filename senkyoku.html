@@ -7,14 +7,23 @@
   </head>
   <body>
     <div id="input_div">
-      <label for="yotou">与党</label>
-      <input name="yotou" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 0)">
+      <form oninput="result.value=yotou.value">
+        <label for="yotou">与党</label>
+        <input name="yotou" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 0)">
+        <output name="result" for="yotou">1.00</output>
+      </form>
 
-      <label for="yatou">野党</label>
-      <input name="yatou" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 1)">
+      <form oninput="result.value=yatou.value">
+        <label for="yatou">野党</label>
+        <input name="yatou" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 1)">
+        <output name="result" for="yatou">1.00</output>
+      </form>
 
-      <label for="other">その他</label>
-      <input name="other" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 2)">
+      <form oninput="result.value=other.value">
+        <label for="other">その他</label>
+        <input name="other" type="range" min="0" max="2" step="0.05" value="1.0" onchange="updateSlider(this.value, 2)">
+        <output name="result" for="other">1.00</output>
+      </form>
     </div>
     <div id="input_div">
       <ul>
@@ -72,16 +81,9 @@
     }
 
     const updateSlider = (val, key) => {
-      if (key === 0) {
-        yotouWeight = val;
-        d3.select("span#yotouWeightSpan").text(val);
-      } else if (key === 1) {
-        yatouWeight = val;
-        d3.select("span#yatouWeightSpan").text(val);
-      } else {
-        otherWeight = val;
-        d3.select("span#otherWeightSpan").text(val);
-      }
+      if (key === 0) yotouWeight = val;
+      else if (key === 1) yatouWeight = val;
+      else otherWeight = val;
 
       svg.selectAll("path")
         .style("stroke", "gray")
