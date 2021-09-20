@@ -27,6 +27,11 @@
     </div>
     <div id="map_div">
       <h2>総投票数</h2>
+      <ul>
+        <li>選挙区: <span class="ku_name"></li>
+        <li>選挙区当選 (2017): <span class="top_candidate"></li>
+        <li>票数 (2017): <span class="top_vote"></li>
+      </ul>
       <svg id="map"></svg>
     </div>
   </body>
@@ -129,7 +134,6 @@
 
     async function setUpData() {
       const map = await d3.json("https://raw.githubusercontent.com/amay077/senkyoku289/master/senkyoku289polygon.geojson");
-      // map.features.sort((a, b) => a.properties.id - b.properties.id);
 
       // http://www.ner.takushoku-u.ac.jp/masano/class_material/waseda/keiryo/R39_visualize_Election.html
       // データはこちらからダウンロード
@@ -195,7 +199,13 @@
         .on("mouseover", (_, d) => {
           const target_data = getTargetData(d, senkyo_2017);
           const first_cand = target_data.reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
-          console.log(first_cand);
+
+          d3.select('span.ku_name')
+            .text(first_cand.pref + first_cand.kun + "区");
+          d3.select('span.top_candidate')
+            .text(first_cand.j_name + " (" + first_cand.seito + ")");
+          d3.select('span.top_vote')
+            .text(first_cand.vote + "票");
         });
     }
   </script>
