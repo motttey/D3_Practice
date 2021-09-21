@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Interactive Map</title>
+  </head>
+  <body>
+    <div id="map_div">
+      <h2>総投票数</h2>
+      <ul>
+        <li>選挙区: <span class="ku_name"></li>
+        <li>選挙区当選 (2017): <span class="top_candidate"></li>
+        <li>票数 (2017): <span class="top_vote"></li>
+      </ul>
+      <svg id="map"></svg>
+    </div>
+  </body>
+
+  <style>
+  .line {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1.5px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  </style>
+
+  <script>
+    const width = 900;
+    const height = 600;
+    const bar_height = 400;
+
+    const centerPos = [137.0, 36.0]; // 地図のセンター位置
+    const scale = 1300; // 地図のスケール
+
+    const data = Array.from(Array(47), (v, k) => Math.random(1));
+    const margin = 50;
+    const duration = 1000;
+
+    // 地図の投影設定
+    const projection = d3
+      .geoMercator()
+      .center(centerPos)
+      .translate([width / 2, height / 2])
+      .scale(scale);
+
+    let senkyo_2017_map = [];
+
+    // 地図をpathに投影(変換)
+    const path = d3.geoPath().projection(projection);
+
+    // SVG要素を追加
+    const svg = d3
+      .select("#map_div")
+      .select("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("class", "map");
+
+    const zoom = d3.zoom()
+      .scaleExtent([1, 3])
+      .on('zoom', (e) => {
+        svg.selectAll('path')
+          .attr('transform', e.transform);
+      });
+
+    const getTargetData = (d, senkyo_data) => {
+      const pref_name = d.properties.kuname.split(new RegExp('[0-9]'))[0];
+      return senkyo_data
+        .filter((c) => c.pref ===  pref_name && c.kun == d.properties.ku.toString());
+    }
+
+    svg.call(zoom);
+
+    setUpData();
+
+    async function setUpData() {
+      const map = await d3.json("https://raw.githubusercontent.com/amay077/senkyoku289/master/senkyoku289polygon.geojson");
+
+      // http://www.ner.takushoku-u.ac.jp/masano/class_material/waseda/keiryo/R39_visualize_Election.html
+      // データはこちらからダウンロード
+      const senkyo = await d3.csv("csv/hr96-17.csv");
+      const senkyo_2017 = senkyo.filter((d) => d.year == "2017");
+      console.log(senkyo_2017);
+
+      senkyo_2017_map = map.features.map((d) => {
+        const target_data = getTargetData(d, senkyo_2017);
+        const pref_name = d.properties.kuname.split(new RegExp('[0-9]'))[0];
+
+        const yotouVote = target_data
+          .filter((c) => ["自民", "公明"].includes(c.seito))
+          .map((d) => parseInt(d.vote))
+          .reduce((a, b) => a + b, 0);
+
+        const yatouVote = target_data
+          .filter((c) => ["立憲民主", "希望の党", "共産", "社民"].includes(c.seito))
+          .map((d) => parseInt(d.vote))
+          .reduce((a, b) => a + b, 0);
+
+        const otherVote = target_data
+          .filter((c) => ["日本維新の会", "諸派"].includes(c.seito))
+          .map((d) => parseInt(d.vote))
+          .reduce((a, b) => a + b, 0);
+
+        return new Object({
+          "pref_name": pref_name,
+          "ku": d.properties.ku.toString(),
+          "yotou_vote": yotouVote,
+          "yatou_vote": yatouVote,
+          "other_vote": otherVote
+        });
+      });
+
+      const total_tokuhyo = senkyo_2017.map((d) => parseInt(d.vote))
+        .reduce((a, b) => a + b);
+
+      d3.select('h2')
+        .text("総投票数: " + total_tokuhyo.toLocaleString());
+
+      // 政党の一覧
+      const seitoList = senkyo_2017.map((d) => d.seito)
+        .filter((d, i, self) => self.indexOf(d) === i);
+
+      console.log(seitoList);
+
+      svg.selectAll("path")
+        .data(map.features)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .attr("class", "pref")
+        .style("stroke", "gray")
+        .style("stroke-width", 0.25)
+        .style("fill", (d, i) => {
+          const target_data = getTargetData(d, senkyo_2017);
+
+          const first_cand = target_data.reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
+
+          return parseInt(first_cand.seshu_dummy) === 1 ? "salmon" : "gray";
+        })
+        .on("mouseover", (_, d) => {
+          const target_data = getTargetData(d, senkyo_2017);
+          const first_cand = target_data.reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
+          console.log(first_cand);
+
+          d3.select('span.ku_name')
+            .text(first_cand.pref + first_cand.kun + "区");
+          d3.select('span.top_candidate')
+            .text(first_cand.j_name + " (" + first_cand.seito + ")");
+          d3.select('span.top_vote')
+            .text(first_cand.vote + "票");
+        });
+    }
+  </script>
+</html>
