@@ -2,6 +2,8 @@
 <html lang="en">
    <head>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://unpkg.com/textures@1.2.0/dist/textures.js"></script>
+
     <meta charset="utf-8"/>
     <title>D3 Interactive Map</title>
   </head>
@@ -40,6 +42,13 @@
     const margin = 50;
     const duration = 1000;
 
+    // 2つ条件が適合した場合のtexture
+    const sesyuTexture = textures.lines()
+      .stroke("black")
+      .background("salmon")
+      .size(7)
+      .strokeWidth(1);
+
     // 地図の投影設定
     const projection = d3
       .geoMercator()
@@ -65,6 +74,8 @@
       .on('zoom', (e) => {
         svg.selectAll('path')
           .attr('transform', e.transform);
+
+        // svg.call(sesyuTexture);
       });
 
     const getTargetData = (d, senkyo_data) => {
@@ -74,6 +85,7 @@
     }
 
     svg.call(zoom);
+    svg.call(sesyuTexture);
 
     setUpData();
 
@@ -137,9 +149,15 @@
         .style("fill", (d, i) => {
           const target_data = getTargetData(d, senkyo_2017);
 
-          const first_cand = target_data.reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
+          const first_cand = target_data
+            .reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
 
-          return parseInt(first_cand.seshu_dummy) === 1 ? "salmon" : "gray";
+          const has_sesyu = target_data
+            .some((d) => parseInt(d.seshu_dummy) === 1);
+
+          if (parseInt(first_cand.seshu_dummy) === 1) return sesyuTexture.url();
+          else if (has_sesyu) return "salmon";
+          else return "gray";
         })
         .on("mouseover", (_, d) => {
           const target_data = getTargetData(d, senkyo_2017);
