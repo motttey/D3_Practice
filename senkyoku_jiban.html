@@ -43,11 +43,11 @@
     const duration = 1000;
 
     // 2つ条件が適合した場合のtexture
-    const sesyuTexture = textures.lines()
-      .stroke("black")
-      .background("salmon")
+    let sesyuTexture = textures.lines()
+      .stroke("salmon")
+      .background("gray")
       .size(7)
-      .strokeWidth(1);
+      .strokeWidth(2);
 
     // 地図の投影設定
     const projection = d3
@@ -75,8 +75,30 @@
         svg.selectAll('path')
           .attr('transform', e.transform);
 
-        // svg.call(sesyuTexture);
+        const k = (e.transform.k) ? e.transform.k: 1;
+        sesyuTexture = textures.lines()
+          .stroke("salmon")
+          .background("gray")
+          .size(7 * k/2)
+          .strokeWidth(1 * k/2);
+
+        svg.call(sesyuTexture);
+
+        coloringMap(svg, senkyo_2017_map);
       });
+
+    const coloringMap = (svg, senkyo_2017_map) => {
+
+      svg.selectAll("path")
+      .style("fill", (d, i) => {
+        if (i >= senkyo_2017_map.length) return "gray";
+
+        const sesyu_flag = senkyo_2017_map[i].sesyu_flag;
+        if (sesyu_flag === 1) return "salmon";
+        else if (sesyu_flag === 2) return sesyuTexture.url();
+        else return "gray";
+      });
+    }
 
     const getTargetData = (d, senkyo_data) => {
       const pref_name = d.properties.kuname.split(new RegExp('[0-9]'))[0];
@@ -101,6 +123,8 @@
       senkyo_2017_map = map.features.map((d) => {
         const target_data = getTargetData(d, senkyo_2017);
         const pref_name = d.properties.kuname.split(new RegExp('[0-9]'))[0];
+        const first_cand = target_data
+          .reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
 
         const yotouVote = target_data
           .filter((c) => ["自民", "公明"].includes(c.seito))
@@ -117,12 +141,20 @@
           .map((d) => parseInt(d.vote))
           .reduce((a, b) => a + b, 0);
 
+        const has_sesyu = target_data
+          .some((d) => parseInt(d.seshu_dummy) === 1);
+
+        let sesyu_flag = 0;
+        if (parseInt(first_cand.seshu_dummy) === 1) sesyu_flag = 1;
+        else if (has_sesyu) sesyu_flag = 2;
+
         return new Object({
           "pref_name": pref_name,
           "ku": d.properties.ku.toString(),
           "yotou_vote": yotouVote,
           "yatou_vote": yatouVote,
-          "other_vote": otherVote
+          "other_vote": otherVote,
+          "sesyu_flag": sesyu_flag
         });
       });
 
@@ -145,20 +177,11 @@
         .attr("d", path)
         .attr("class", "pref")
         .style("stroke", "gray")
-        .style("stroke-width", 0.25)
-        .style("fill", (d, i) => {
-          const target_data = getTargetData(d, senkyo_2017);
+        .style("stroke-width", 0.25);
 
-          const first_cand = target_data
-            .reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
+      coloringMap(svg, senkyo_2017_map);
 
-          const has_sesyu = target_data
-            .some((d) => parseInt(d.seshu_dummy) === 1);
-
-          if (parseInt(first_cand.seshu_dummy) === 1) return sesyuTexture.url();
-          else if (has_sesyu) return "salmon";
-          else return "gray";
-        })
+      svg.selectAll("path")
         .on("mouseover", (_, d) => {
           const target_data = getTargetData(d, senkyo_2017);
           const first_cand = target_data.reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
