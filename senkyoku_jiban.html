@@ -35,8 +35,8 @@
     const height = 700;
     const bar_height = 400;
 
-    const centerPos = [138.0, 36.9]; // 地図のセンター位置
-    const scale = 1750; // 地図のスケール
+    const centerPos = [138.0, 30.5]; // 地図のセンター位置
+    const scale = 1500; // 地図のスケール
 
     const data = Array.from(Array(47), (v, k) => Math.random(1));
     const margin = 50;
@@ -68,12 +68,15 @@
       .attr("width", width)
       .attr("height", height)
       .attr("class", "map")
+
+    const mapGroup = svg.append("g")
+      .attr("class", "map")
       .attr("transform", "rotate(30)");
 
     const zoom = d3.zoom()
       .scaleExtent([1, 3])
       .on('zoom', (e) => {
-        svg.selectAll('path')
+        mapGroup.selectAll('path')
           .attr('transform', e.transform);
 
         const k = (e.transform.k) ? e.transform.k: 1;
@@ -83,12 +86,60 @@
           .size(7 * k/2)
           .strokeWidth(1 * k/2);
 
-        coloringMap(svg, senkyo_2017_map);
+        coloringMap(mapGroup, senkyo_2017_map);
       });
 
-    const coloringMap = (svg, senkyo_2017_map) => {
-      svg.call(sesyuTexture);
-      svg.selectAll("path")
+    const labelGroup = svg
+      .append("g")
+      .attr("class", "label");
+
+    const labels = [
+      {
+        text: "世襲候補が当選",
+        sesyuFlag: 1
+      },
+      {
+        text: "世襲候補が立候補",
+        sesyuFlag: 2
+      },
+      {
+        text: "その他",
+        sesyuFlag: 0
+      }
+    ];
+
+    const offset = 8;
+    const labelSize = 7;
+    labelGroup.selectAll(".labelDots")
+      .data(labels)
+      .enter()
+      .append("rect")
+        .attr("x", margin/2)
+        .attr("y", (d, i) => margin + i * labelSize * 4)
+        .attr("class", "labelDots")
+        .attr("width", labelSize * 4)
+        .attr("height", labelSize * 2)
+        .style("fill", (d) => {
+          if (d.sesyuFlag === 1) return "salmon";
+          else if (d.sesyuFlag === 2) return sesyuTexture.url();
+          else return "gray";
+        });
+
+    labelGroup.selectAll(".labelText")
+      .data(labels)
+      .enter()
+      .append("text")
+        .attr("x", margin/2 + labelSize * 4 + offset)
+        .attr("y", (d, i) => margin + i * labelSize * 4 + offset)
+        .attr("class", "labelText")
+        .style("fill", "gray")
+        .text((d) => d.text)
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle");
+
+    const coloringMap = (mapGroup, senkyo_2017_map) => {
+      mapGroup.call(sesyuTexture);
+      mapGroup.selectAll("path")
       .style("fill", (d, i) => {
         if (i >= senkyo_2017_map.length) return "gray";
 
@@ -105,7 +156,7 @@
         .filter((c) => c.pref ===  pref_name && c.kun == d.properties.ku.toString());
     }
 
-    svg.call(zoom);
+    mapGroup.call(zoom);
 
     setUpData();
 
@@ -168,7 +219,7 @@
 
       console.log(seitoList);
 
-      svg.selectAll("path")
+      mapGroup.selectAll("path")
         .data(map.features)
         .enter()
         .append("path")
@@ -177,9 +228,9 @@
         .style("stroke", "gray")
         .style("stroke-width", 0.25);
 
-      coloringMap(svg, senkyo_2017_map);
+      coloringMap(mapGroup, senkyo_2017_map);
 
-      svg.selectAll("path")
+      mapGroup.selectAll("path")
         .on("mouseover", (_, d) => {
           const target_data = getTargetData(d, senkyo_2017);
           const first_cand = target_data.reduce((a, b) => parseInt(a.rank) < parseInt(b.rank)? a: b);
