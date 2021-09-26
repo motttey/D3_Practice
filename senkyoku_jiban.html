@@ -19,17 +19,6 @@
     </div>
   </body>
 
-  <style>
-  .line {
-    fill: none;
-    stroke: #000;
-    stroke-width: 1.5px;
-    stroke-linejoin: round;
-    stroke-linecap: round;
-  }
-
-  </style>
-
   <script>
     const width = 1200;
     const height = 700;
@@ -96,20 +85,21 @@
     const labels = [
       {
         text: "世襲候補が当選",
-        sesyuFlag: 1
+        sesyu_flag: 1
       },
       {
         text: "世襲候補が立候補",
-        sesyuFlag: 2
+        sesyu_flag: 2
       },
       {
         text: "その他",
-        sesyuFlag: 0
+        sesyu_flag: 0
       }
     ];
 
-    const offset = 8;
-    const labelSize = 7;
+    // 凡例をようがする描画する
+    const offset = 11;
+    const labelSize = 9;
     labelGroup.selectAll(".labelDots")
       .data(labels)
       .enter()
@@ -120,8 +110,8 @@
         .attr("width", labelSize * 4)
         .attr("height", labelSize * 2)
         .style("fill", (d) => {
-          if (d.sesyuFlag === 1) return "salmon";
-          else if (d.sesyuFlag === 2) return sesyuTexture.url();
+          if (d.sesyu_flag === 1) return "salmon";
+          else if (d.sesyu_flag === 2) return sesyuTexture.url();
           else return "gray";
         });
 
@@ -217,8 +207,6 @@
       const seitoList = senkyo_2017.map((d) => d.seito)
         .filter((d, i, self) => self.indexOf(d) === i);
 
-      console.log(seitoList);
-
       mapGroup.selectAll("path")
         .data(map.features)
         .enter()
@@ -243,6 +231,16 @@
           d3.select('span.top_vote')
             .text(first_cand.vote + "票");
         });
+
+      labelGroup.selectAll(".labelText")
+        .text((d) =>
+          d.text + '('
+            + senkyo_2017_map.filter((s) => s.sesyu_flag === d.sesyu_flag)
+              .length.toString()
+            + '/' + senkyo_2017_map.length.toString()
+            + ')'
+        )
+
     }
   </script>
 </html>
