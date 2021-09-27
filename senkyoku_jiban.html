@@ -32,11 +32,17 @@
     const duration = 1000;
 
     // 2つ条件が適合した場合のtexture
+    const initialTexture = textures.lines()
+      .stroke("salmon")
+      .background("gray")
+      .size(5)
+      .strokeWidth(1);
+
     let sesyuTexture = textures.lines()
       .stroke("salmon")
       .background("gray")
-      .size(7)
-      .strokeWidth(2);
+      .size(5)
+      .strokeWidth(1);
 
     // 地図の投影設定
     const projection = d3
@@ -68,12 +74,12 @@
         mapGroup.selectAll('path')
           .attr('transform', e.transform);
 
-        const k = (e.transform.k) ? e.transform.k: 1;
+        const k = (e.transform.k && e.transform.k >= 1) ? e.transform.k: 1;
         sesyuTexture = textures.lines()
           .stroke("salmon")
           .background("gray")
-          .size(7 * k/2)
-          .strokeWidth(1 * k/2);
+          .size(2 * (1 + k/4))
+          .strokeWidth(1);
 
         coloringMap(mapGroup, senkyo_2017_map);
       });
@@ -213,7 +219,7 @@
         .append("path")
         .attr("d", path)
         .attr("class", "pref")
-        .style("stroke", "gray")
+        .style("stroke", "white")
         .style("stroke-width", 0.25);
 
       coloringMap(mapGroup, senkyo_2017_map);
