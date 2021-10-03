@@ -6,6 +6,9 @@
 
     <meta charset="utf-8"/>
     <title>D3 Interactive Map</title>
+    <p>データ取得元:
+      <a href="http://www.ner.takushoku-u.ac.jp/masano/class_material/waseda/keiryo/R39_visualize_Election.html">総選挙データの可視化</a>
+    </p>
   </head>
   <body>
     <div id="map_div">
@@ -22,7 +25,6 @@
   <script>
     const width = 1200;
     const height = 700;
-    const bar_height = 400;
 
     const centerPos = [138.0, 30.5]; // 地図のセンター位置
     const scale = 1500; // 地図のスケール
@@ -103,9 +105,9 @@
       }
     ];
 
-    // 凡例をようがする描画する
     const offset = 11;
     const labelSize = 9;
+
     labelGroup.selectAll(".labelDots")
       .data(labels)
       .enter()
@@ -159,8 +161,6 @@
     async function setUpData() {
       const map = await d3.json("https://raw.githubusercontent.com/amay077/senkyoku289/master/senkyoku289polygon.geojson");
 
-      // http://www.ner.takushoku-u.ac.jp/masano/class_material/waseda/keiryo/R39_visualize_Election.html
-      // データはこちらからダウンロード
       const senkyo = await d3.csv("csv/hr96-17.csv");
       const senkyo_2017 = senkyo.filter((d) => d.year == "2017");
       console.log(senkyo_2017);
@@ -246,7 +246,6 @@
             + '/' + senkyo_2017_map.length.toString()
             + ')'
         )
-
     }
   </script>
 </html>
