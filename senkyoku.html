@@ -3,7 +3,7 @@
    <head>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <meta charset="utf-8"/>
-    <title>D3 Interactive Map</title>
+    <title>選挙区と予想得票数</title>
   </head>
   <body>
     <div id="input_div">
@@ -35,17 +35,6 @@
       <svg id="map"></svg>
     </div>
   </body>
-
-  <style>
-  .line {
-    fill: none;
-    stroke: #000;
-    stroke-width: 1.5px;
-    stroke-linejoin: round;
-    stroke-linecap: round;
-  }
-
-  </style>
 
   <script>
     const width = 900;
@@ -178,8 +167,6 @@
       // 政党の一覧
       const seitoList = senkyo_2017.map((d) => d.seito)
         .filter((d, i, self) => self.indexOf(d) === i);
-
-      console.log(seitoList);
 
       svg.selectAll("path")
         .data(map.features)
