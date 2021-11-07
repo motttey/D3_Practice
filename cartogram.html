@@ -12,10 +12,7 @@
   </head>
   <body>
     <div id="map_div">
-      <svg id="map" width="800px" height="1000px"></svg>
-    </div>
-    <div id="bar_chart_div">
-      <svg id="bar_chart"></svg>
+      <svg id="map" width="1400px" height="1400px"></svg>
     </div>
   </body>
 
@@ -42,12 +39,13 @@
         .valFormatter(n => n.toPrecision(3))
         (document.getElementById('map'));
 
-    d3.json('https://raw.githubusercontent.com/mtraynham/natural-earth-topo/master/topojson/ne_110m_admin_0_countries.json', (error, world) => {
+    const url = 'https://raw.githubusercontent.com/mtraynham/natural-earth-topo/master/topojson/ne_110m_admin_0_countries.json'
+    d3.json(url, (error, world) => {
         if (error) throw error;
 
         // exclude antarctica
         world.objects.ne_110m_admin_0_countries.geometries.splice(
-            world.objects.ne_110m_admin_0_countries.geometries.findIndex(d => d.properties.ISO_A2 === 'AQ'),
+            world.objects.ne_110m_admin_0_countries.geometries.findIndex(d => d.properties.brk_a3 === 'AQ'),
             1
         );
 
@@ -56,22 +54,32 @@
         cartogram
             .topoJson(world)
             .topoObjectName('ne_110m_admin_0_countries')
-            .value(({ properties: { ISO_A2 } }) => ccData[ISO_A2])
+            .value(({ properties: { pop_est } }) => ccData[pop_est])
             .color(({ properties: { pop_est } }) => colorScale(pop_est))
             .label(({ properties: p }) => `${p.brk_name} (${p.brk_a3})`)
             .onClick(d => console.info(d));
 
-        const controls = { 'Iterations': 15, 'Randomize': () => { genVals(); render(); }};
-        gui.add(controls, 'Iterations', 1, 40).step(1).onChange(render);
+        const controls = {
+          'Iterations': 10,
+          'Randomize': () => { genVals(); render(); }
+        };
+
+        gui.add(controls, 'Iterations', 1, 16).step(1).onChange(render);
         gui.add(controls, 'Randomize');
 
         genVals();
         render();
 
+        d3.select("svg.cartogram")
+          .attr("width", "1000")
+          .attr("height", "1400");
+
         //
         function genVals() {
             ccData = Object.assign(...world.objects.ne_110m_admin_0_countries.geometries
-                .map(({ properties: { ISO_A2 } }) => ({ [ISO_A2]: Math.random() }))
+                .map(({ properties: { pop_est } }) => ({
+                  [pop_est]: Math.random()
+                }))
             );
         }
 
