@@ -4,12 +4,12 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
     <meta charset="utf-8"/>
-    <title>D3 Contour Scatteplot</title>
+    <title>D3 Hexbin Scatteplot</title>
   </head>
   <body>
-    <h1>D3 Contour Scatteplot</h1>
-    <div id="contour_scatterplot_div">
-      <svg id="contour_scatterplot"></svg>
+    <h1>D3 Hexbin Scatteplot</h1>
+    <div id="hexbin_scatterplot_div">
+      <svg id="hexbin_scatterplot"></svg>
     </div>
   </body>
 </html>
@@ -24,29 +24,29 @@
 
   // SVG要素を追加
   const svg = d3
-    .select("#contour_scatterplot_div")
+    .select("#hexbin_scatterplot_div")
     .select("svg")
     .attr("width", width + margin.right + margin.left)
     .attr("height", height + margin.top + margin.bottom)
-    .attr("transform", "translate(" + margin.left + ", " + margin.bottom + ")")
-    .attr("class", "contour_scatterplot");
+    .attr("transform", "translate(" + margin.left + ", " + margin.bottom + ")");
 
-  const n = 1000;
-  const n2 = 500;
+  const generateData = (n, n2) => {
+    return Array.apply(null, Array(n)).map((d, i) => {
+      if (i < n2) {
+        return new Object({
+          "x": d3.randomNormal(width/2, 100)(),
+          "y": d3.randomNormal(height/2, 100)()
+        })
+      } else {
+        return Object({
+          "x": d3.randomNormal(width/4, 50)(),
+          "y": d3.randomNormal(height/4, 50)()
+        })
+      }
+    });
+  }
 
-  let data = Array.apply(null, Array(n)).map((d, i) => {
-    if (i < n2) {
-      return new Object({
-        "x": d3.randomNormal(width/2, 100)(),
-        "y": d3.randomNormal(height/2, 100)()
-      })
-    } else {
-      return Object({
-        "x": d3.randomNormal(width/4, 50)(),
-        "y": d3.randomNormal(height/4, 50)()
-      })
-    }
-  });
+  let data = generateData(1000, 500);
 
   const valXMax = d3.max(data.map((d) => d["x"]));
   const valYMax = d3.max(data.map((d) => d["y"]));
@@ -82,6 +82,6 @@
     .enter().append("path")
       .attr("d", (d) => `M${d.x},${d.y}${hexbin.hexagon()}`)
       .attr("fill", (d) => color(d.length))
-      .style("opacity", 0.5);
+      .style("opacity", 0.75);
 
 </script>
