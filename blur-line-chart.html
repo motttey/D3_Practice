@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 Blur Line Chart</title>
+  </head>
+  <body>
+    <h1>D3 Blur Line Chart</h1>
+    <div id="blur_line_chart_div">
+      <svg id="blur_line_chart"></svg>
+    </div>
+  </body>
+</html>
+
+<style>
+</style>
+
+<script>
+  const width = 800;
+  const height = 800;
+  const margin = {top: 50, right: 50, bottom: 50, left: 50};
+
+  // SVG要素を追加
+  const svg = d3
+    .select("#blur_line_chart_div")
+    .select("svg")
+    .attr("width", width + margin.right + margin.left)
+    .attr("height", height + margin.top + margin.bottom)
+    .attr("transform", "translate(" + margin.left + ", " + margin.bottom + ")");
+
+  const generateData = (len, max1, max2) => {
+    const retArr = [];
+    const decay = 0.8;
+    let seed1 = max1;
+    let seed2 = max2;
+
+    for (let i = 0; i < len; i++) {
+      const vimps = parseInt(seed1 * Math.random());
+      const clicks = parseInt(seed2 * Math.random());
+
+      retArr.push({
+        vimps: vimps,
+        clicks: clicks,
+        vctr: (vimps > 0) ? clicks/vimps : 0
+      });
+
+      seed1 = seed1 * decay;
+      seed2 = seed2 * decay;
+    }
+    return retArr;
+  }
+
+  const len = 30;
+  const chart_height = 300;
+  let data = generateData(30, 10000, 500);
+  console.log(data);
+
+  const xScale = d3.scaleLinear()
+    .domain([0, len - 1])
+    .range([margin.left, width - margin.right]);
+
+  console.log(data.map((d) => d["vctr"]));
+
+  const yScale = d3.scaleLinear()
+    .domain([0, d3.max(data.map((d) => d["vctr"]))])
+    .range([margin.top, chart_height]);
+
+  const g = svg.append("g")
+    .attr("id", "line-chart");
+
+  const line = d3.line()
+    .x((_, i) => xScale(i))
+    .y((d) => yScale(d["vctr"]));
+
+  g.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "red")
+    .attr("stroke-width", 1.5)
+    .attr("d", line);
+
+  g.append("g")
+    .attr("transform", "translate(" + 0 + "," + chart_height + ")")
+    .call(d3.axisBottom(xScale));
+
+  g.append("g")
+    .attr("transform", "translate(" + margin.left + "," + 0 + ")")
+    .call(d3.axisLeft(yScale));
+
+</script>
