@@ -43,7 +43,8 @@
       retArr.push({
         vimps: vimps,
         clicks: clicks,
-        vctr: (vimps > 0) ? clicks/vimps : 0
+        vctr: (vimps > 0) ? clicks/vimps : 0,
+        index: i
       });
 
       seed1 = seed1 * decay;
@@ -52,9 +53,27 @@
     return retArr;
   }
 
+  const devideDataByDenominator = (data, key, th) => {
+    const higherThan = [];
+    const lowerThan = [];
+
+    data.forEach((d, i) => {
+      (d[key] > th) ? higherThan.push(d) : lowerThan.push(d);
+    });
+
+    // higherThan.push(lowerThan[0]);
+
+    return {
+      higherThan: higherThan,
+      lowerThan: lowerThan
+    }
+  }
+
   const len = 30;
   const chart_height = 300;
-  let data = generateData(30, 10000, 500);
+  const vimps_max = 10000;
+  const click_max = 500;
+  let data = generateData(len, vimps_max, click_max);
   console.log(data);
 
   const xScale = d3.scaleLinear()
@@ -67,19 +86,29 @@
     .domain([0, d3.max(data.map((d) => d["vctr"]))])
     .range([margin.top, chart_height]);
 
+  const { higherThan, lowerThan } = devideDataByDenominator(data, "vimps", vimps_max/100);
+
   const g = svg.append("g")
     .attr("id", "line-chart");
 
   const line = d3.line()
-    .x((_, i) => xScale(i))
+    .x((d) => xScale(d["index"]))
     .y((d) => yScale(d["vctr"]));
 
   g.append("path")
-    .datum(data)
+    .datum(higherThan)
     .attr("fill", "none")
     .attr("stroke", "red")
     .attr("stroke-width", 1.5)
     .attr("d", line);
+
+  g.append("path")
+    .datum(lowerThan)
+    .attr("fill", "none")
+    .attr("stroke", "red")
+    .attr("stroke-width", 1.5)
+    .attr("d", line)
+    .style("opacity", 0.5);
 
   g.append("g")
     .attr("transform", "translate(" + 0 + "," + chart_height + ")")
