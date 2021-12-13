@@ -74,7 +74,6 @@
   const vimps_max = 10000;
   const click_max = 500;
   let data = generateData(len, vimps_max, click_max);
-  console.log(data);
 
   const xScale = d3.scaleLinear()
     .domain([0, len - 1])
@@ -86,8 +85,6 @@
     .domain([0, d3.max(data.map((d) => d["vctr"]))])
     .range([margin.top, chart_height]);
 
-  const { higherThan, lowerThan } = devideDataByDenominator(data, "vimps", vimps_max/100);
-
   const g = svg.append("g")
     .attr("id", "line-chart");
 
@@ -95,20 +92,29 @@
     .x((d) => xScale(d["index"]))
     .y((d) => yScale(d["vctr"]));
 
-  g.append("path")
-    .datum(higherThan)
-    .attr("fill", "none")
-    .attr("stroke", "red")
-    .attr("stroke-width", 1.5)
-    .attr("d", line);
+  const threshold = vimps_max/100;
+  data.forEach((d, i) => {
+    if (i === 0) return;
 
-  g.append("path")
-    .datum(lowerThan)
-    .attr("fill", "none")
-    .attr("stroke", "red")
-    .attr("stroke-width", 1.5)
-    .attr("d", line)
-    .style("opacity", 0.5);
+    const pathData = [d, data[i-1]];
+    if (d["vimps"] < threshold && data[i-1]["vimps"] < threshold) {
+      g.append("path")
+        .datum(pathData)
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-width", 1.5)
+        .attr("d", line)
+        .style("opacity", 0.5);
+
+    } else {
+      g.append("path")
+        .datum(pathData)
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-width", 1.5)
+        .attr("d", line);
+    }
+  });
 
   g.append("g")
     .attr("transform", "translate(" + 0 + "," + chart_height + ")")
