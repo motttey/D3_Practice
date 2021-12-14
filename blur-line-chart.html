@@ -87,16 +87,44 @@
 
   console.log(data.map((d) => d["vctr"]));
 
-  const yScale = d3.scaleLinear()
+  // デフォルトのグラフ
+  const g1 = svg.append("g")
+    .attr("id", "default-line-chart");
+
+  const yScale1 = d3.scaleLinear()
     .domain([0, d3.max(data.map((d) => d["vctr"]))])
     .range([chart_height, margin.top]);
 
-  const g = svg.append("g")
-    .attr("id", "line-chart");
-
-  const line = d3.line()
+  const line1 = d3.line()
     .x((d) => xScale(d["index"]))
-    .y((d) => yScale(d["vctr"]));
+    .y((d) => yScale1(d["vctr"]));
+
+  g1.append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "red")
+    .attr("stroke-width", 1.5)
+    .attr("d", line1);
+
+  g1.append("g")
+    .attr("transform", "translate(" + 0 + "," + chart_height + ")")
+    .call(d3.axisBottom(xScale));
+
+  g1.append("g")
+    .attr("transform", "translate(" + margin.left + "," + 0 + ")")
+    .call(d3.axisLeft(yScale1));
+
+  // blur ctr line chart
+  const g2 = svg.append("g")
+    .attr("id", "blur-line-chart");
+
+  const yScale2 = d3.scaleLinear()
+    .domain([0, d3.max(data.map((d) => d["vctr"]))])
+    .range([chart_height * 2, chart_height + margin.top]);
+
+  const line2 = d3.line()
+    .x((d) => xScale(d["index"]))
+    .y((d) => yScale2(d["vctr"]));
 
   const threshold = vimps_max/100;
   data.forEach((d, i) => {
@@ -104,31 +132,32 @@
 
     const pathData = [d, data[i-1]];
     if (d["vimps"] < threshold && data[i-1]["vimps"] < threshold) {
-      g.append("path")
+      g2.append("path")
         .datum(pathData)
         .attr("fill", "none")
         .attr("stroke", "red")
         .attr("stroke-width", 1.5)
-        .attr("d", line)
+        .attr("d", line2)
         .attr("filter", "url(#blur)")
         .style("opacity", 0.5);
 
     } else {
-      g.append("path")
+      g2.append("path")
         .datum(pathData)
         .attr("fill", "none")
         .attr("stroke", "red")
         .attr("stroke-width", 1.5)
-        .attr("d", line);
+        .attr("d", line2);
     }
   });
 
-  g.append("g")
-    .attr("transform", "translate(" + 0 + "," + chart_height + ")")
+  g2.append("g")
+    .attr("transform", "translate(" + 0 + "," + chart_height * 2 + ")")
     .call(d3.axisBottom(xScale));
 
-  g.append("g")
+  g2.append("g")
     .attr("transform", "translate(" + margin.left + "," + 0 + ")")
-    .call(d3.axisLeft(yScale));
+    .call(d3.axisLeft(yScale2));
+
 
 </script>
