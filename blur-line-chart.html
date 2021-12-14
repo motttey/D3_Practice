@@ -9,7 +9,13 @@
   <body>
     <h1>D3 Blur Line Chart</h1>
     <div id="blur_line_chart_div">
-      <svg id="blur_line_chart"></svg>
+      <svg id="blur_line_chart">
+        <defs>
+          <filter id="blur" x="0" y="0">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
+          </filter>
+        </defs>
+      </svg>
     </div>
   </body>
 </html>
@@ -37,7 +43,7 @@
     let seed2 = max2;
 
     for (let i = 0; i < len; i++) {
-      const vimps = parseInt(seed1 * Math.random());
+      const vimps = seed1 / 2 + parseInt(seed1 * Math.random());
       const clicks = parseInt(seed2 * Math.random());
 
       retArr.push({
@@ -83,7 +89,7 @@
 
   const yScale = d3.scaleLinear()
     .domain([0, d3.max(data.map((d) => d["vctr"]))])
-    .range([margin.top, chart_height]);
+    .range([chart_height, margin.top]);
 
   const g = svg.append("g")
     .attr("id", "line-chart");
@@ -104,6 +110,7 @@
         .attr("stroke", "red")
         .attr("stroke-width", 1.5)
         .attr("d", line)
+        .attr("filter", "url(#blur)")
         .style("opacity", 0.5);
 
     } else {
