@@ -77,32 +77,33 @@
 
   const len = 30;
   const chart_height = 300;
-  const vimps_max = 10000;
-  const click_max = 500;
-  let data = generateData(len, vimps_max, click_max);
+  const vimps_max_list = [ 10000, 1000, 100000, 200000, 6000, 90000 ];
+  let data = vimps_max_list.map((vimps) => {
+    return generateData(len, vimps, Math.floor(vimps/20));
+  });
 
   const xScale = d3.scaleLinear()
     .domain([0, len - 1])
     .range([margin.left, width - margin.right]);
-
-  console.log(data.map((d) => d["vctr"]));
 
   // デフォルトのグラフ
   const g1 = svg.append("g")
     .attr("id", "default-line-chart");
 
   const yScale1 = d3.scaleLinear()
-    .domain([0, d3.max(data.map((d) => d["vctr"]))])
+    .domain([0, 0.15])
     .range([chart_height, margin.top]);
 
   const line1 = d3.line()
     .x((d) => xScale(d["index"]))
     .y((d) => yScale1(d["vctr"]));
 
-  g1.append("path")
-    .datum(data)
+  g1.selectAll("path")
+    .data(data)
+    .enter()
+    .append("path")
     .attr("fill", "none")
-    .attr("stroke", "red")
+    .attr("stroke", (_, i) => d3.interpolateRainbow(i/data.length))
     .attr("stroke-width", 1.5)
     .attr("d", line1);
 
@@ -119,36 +120,38 @@
     .attr("id", "blur-line-chart");
 
   const yScale2 = d3.scaleLinear()
-    .domain([0, d3.max(data.map((d) => d["vctr"]))])
+    .domain([0, 0.15])
     .range([chart_height * 2, chart_height + margin.top]);
 
   const line2 = d3.line()
     .x((d) => xScale(d["index"]))
     .y((d) => yScale2(d["vctr"]));
 
-  const threshold = vimps_max/100;
-  data.forEach((d, i) => {
-    if (i === 0) return;
+  const threshold = 300;
+  data.forEach((lineData, colorIndex) => {
+    lineData.forEach((d, i) => {
+      if (i === 0) return;
 
-    const pathData = [d, data[i-1]];
-    if (d["vimps"] < threshold && data[i-1]["vimps"] < threshold) {
-      g2.append("path")
-        .datum(pathData)
-        .attr("fill", "none")
-        .attr("stroke", "red")
-        .attr("stroke-width", 1.5)
-        .attr("d", line2)
-        .attr("filter", "url(#blur)")
-        .style("opacity", 0.5);
+      const pathData = [d, lineData[i-1]];
+      if (d["vimps"] < threshold && lineData[i-1]["vimps"] < threshold) {
+        g2.append("path")
+          .datum(pathData)
+          .attr("fill", "none")
+          .attr("stroke", (_, i) => d3.interpolateRainbow(colorIndex/data.length))
+          .attr("stroke-width", 1.5)
+          .attr("d", line2)
+          .attr("filter", "url(#blur)")
+          .style("opacity", 0.5);
 
-    } else {
-      g2.append("path")
-        .datum(pathData)
-        .attr("fill", "none")
-        .attr("stroke", "red")
-        .attr("stroke-width", 1.5)
-        .attr("d", line2);
-    }
+      } else {
+        g2.append("path")
+          .datum(pathData)
+          .attr("fill", "none")
+          .attr("stroke", (_, i) => d3.interpolateRainbow(colorIndex/data.length))
+          .attr("stroke-width", 1.5)
+          .attr("d", line2);
+      }
+    });
   });
 
   g2.append("g")
