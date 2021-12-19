@@ -128,12 +128,20 @@
     .y((d) => yScale2(d["vctr"]));
 
   const threshold = 300;
+  const cond = (d, i, lineData) => d["vimps"] < threshold
+    && lineData[i-1]["vimps"] < threshold;
+
   data.forEach((lineData, colorIndex) => {
+    const blurLineIndexes = [];
+    lineData.forEach((d, i) => {
+      blurLineIndexes.push(i);
+    });
+
     lineData.forEach((d, i) => {
       if (i === 0) return;
-
       const pathData = [d, lineData[i-1]];
-      if (d["vimps"] < threshold && lineData[i-1]["vimps"] < threshold) {
+
+      if (cond(d, i, lineData)) {
         g2.append("path")
           .datum(pathData)
           .attr("fill", "none")
@@ -141,7 +149,7 @@
           .attr("stroke-width", 1.5)
           .attr("d", line2)
           .attr("filter", "url(#blur)")
-          .style("opacity", 0.5);
+          .style("opacity", (blurLineIndexes.length - blurLineIndexes.indexOf(i)) / blurLineIndexes.length);
 
       } else {
         g2.append("path")
