@@ -67,8 +67,6 @@
       (d[key] > th) ? higherThan.push(d) : lowerThan.push(d);
     });
 
-    // higherThan.push(lowerThan[0]);
-
     return {
       higherThan: higherThan,
       lowerThan: lowerThan
@@ -132,16 +130,11 @@
     && lineData[i-1]["vimps"] < threshold;
 
   data.forEach((lineData, colorIndex) => {
-    const blurLineIndexes = [];
-    lineData.forEach((d, i) => {
-      blurLineIndexes.push(i);
-    });
+    lineData.forEach((d, idx) => {
+      if (idx === 0) return;
+      const pathData = [d, lineData[idx-1]];
 
-    lineData.forEach((d, i) => {
-      if (i === 0) return;
-      const pathData = [d, lineData[i-1]];
-
-      if (cond(d, i, lineData)) {
+      if (cond(d, idx, lineData)) {
         g2.append("path")
           .datum(pathData)
           .attr("fill", "none")
@@ -149,7 +142,7 @@
           .attr("stroke-width", 1.5)
           .attr("d", line2)
           .attr("filter", "url(#blur)")
-          .style("opacity", (blurLineIndexes.length - blurLineIndexes.indexOf(i)) / blurLineIndexes.length);
+          .style("opacity", (v) => v[0]["vimps"]/threshold);
 
       } else {
         g2.append("path")
