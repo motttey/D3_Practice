@@ -14,6 +14,9 @@
           <filter id="blur" x="0" y="0">
             <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
           </filter>
+          <filter id="blur2" x="0" y="0">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" />
+          </filter>
         </defs>
       </svg>
     </div>
@@ -152,6 +155,23 @@
           .attr("stroke-width", 1.5)
           .attr("d", line2);
       }
+
+      g2.append("path")
+        .datum(lineData)
+        .attr("fill", "none")
+        .attr("stroke", (_, i) => d3.interpolateRainbow(colorIndex/data.length))
+        .attr("stroke-width", 2)
+        .attr("d", line2)
+        .attr("filter", "url(#blur2)")
+        .style("opacity", 0)
+        .on("mouseover", (event, _) => {
+          d3.select(event.currentTarget)
+            .style("opacity", 1);
+        })
+        .on("mouseout", (event, _) => {
+          d3.select(event.currentTarget)
+            .style("opacity", 0);
+        });
     });
   });
 
