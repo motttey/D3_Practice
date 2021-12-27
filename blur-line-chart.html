@@ -41,13 +41,13 @@
 
   const generateData = (len, max1, max2) => {
     const retArr = [];
-    const decay = 0.8;
+    const decay = 0.85;
     let seed1 = max1;
     let seed2 = max2;
 
     for (let i = 0; i < len; i++) {
-      const vimps = seed1 / 2 + parseInt(seed1 * Math.random());
-      const clicks = parseInt(seed2 * Math.random());
+      let vimps = parseInt(seed1 / 2) + parseInt(seed1 * Math.random());
+      let clicks = parseInt(seed2 * d3.max([Math.random(), 0.5]));
 
       retArr.push({
         vimps: vimps,
@@ -76,13 +76,14 @@
     }
   }
 
-  const len = 30;
+  const len = 50;
   const chart_height = 300;
-  const vimps_max_list = [ 10000, 1000, 100000, 200000, 6000, 90000 ];
+  const vimps_max_list = [ 10000, 1000, 100000, 20000, 6000, 90000 ];
   let data = vimps_max_list.map((vimps) => {
-    return generateData(len, vimps, Math.floor(vimps/20));
+    return generateData(len, vimps, Math.floor(vimps/10));
   });
 
+  const vctr_max = Math.max(...[].concat(...data).map((d) => d["vctr"]));
   const xScale = d3.scaleLinear()
     .domain([0, len - 1])
     .range([margin.left, width - margin.right]);
@@ -92,7 +93,7 @@
     .attr("id", "default-line-chart");
 
   const yScale1 = d3.scaleLinear()
-    .domain([0, 0.15])
+    .domain([0, vctr_max])
     .range([chart_height, margin.top]);
 
   const line1 = d3.line()
@@ -121,7 +122,7 @@
     .attr("id", "blur-line-chart");
 
   const yScale2 = d3.scaleLinear()
-    .domain([0, 0.15])
+    .domain([0, vctr_max])
     .range([chart_height * 2, chart_height + margin.top]);
 
   const line2 = d3.line()
@@ -182,6 +183,5 @@
   g2.append("g")
     .attr("transform", "translate(" + margin.left + "," + 0 + ")")
     .call(d3.axisLeft(yScale2));
-
 
 </script>
