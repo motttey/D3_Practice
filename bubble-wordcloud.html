@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 WordCloud Bubble</title>
+  </head>
+  <body>
+    <h1>D3 WordCloud Bubble</h1>
+    <div id="bubble_div">
+      <svg id="bubble"></svg>
+    </div>
+  </body>
+
+  <style>
+  </style>
+
+  <script>
+  const width = 1000;
+  const height = 1000;
+
+  // SVG要素を追加
+  const svg = d3
+    .select("#bubble_div")
+    .select("svg")
+    .attr("viewBox", "0 0 " + width  + " " + height)
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("class", "packed_bubble_example");
+
+  const data = {
+    "name": "Cloud A",
+    "children": [
+      { "name": "B", "value": 25 },
+      { "name": "G", "value": 12 },
+      { "name": "I", "value": 30 },
+      { "name": "J", "value": 10 },
+      { "name": "K", "value": 50 },
+      { "name": "D", "value": 10 },
+      { "name": "E", "value": 105 },
+      { "name": "F", "value": 10 }
+    ]
+  };
+
+  let root = d3.hierarchy(data);
+  root.sum(function(d) { return d.value; });
+
+  let pack = d3.pack()
+    .size([width, height])
+    .padding(0);
+
+  pack(root);
+
+  let node = svg.selectAll(".node")
+  .data(root.descendants())
+  .enter()
+  .append("g")
+  .attr("transform", function(d) { return "translate(" + d.x + "," + (d.y) + ")"; });
+
+  let color = ["orange", "white", "yellow"];
+  node.append("circle")
+    .attr("r", function(d) { return d.r; })
+    .attr("stroke", "black")
+    .attr("fill", function(d) { return color[d.depth]; });
+
+  node.append("text")
+    .style("text-anchor", function(d) { return d.children ? "end" : "middle"; })
+    .attr("font-size", "100%")
+    .text(function(d) { return d.children ? "" : d.data.name; });
+
+  </script>
+</hmtl>
