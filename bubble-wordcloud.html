@@ -28,18 +28,27 @@
     .attr("height", "100%")
     .attr("class", "packed_bubble_example");
 
+  const abstract = "A visual analytics (VA) interface for formulating evaluation metrics of multi-dimensional time-series data is proposed. Evaluation metrics such as key performance indicators (KPI) are expected to play an important role in quantitatively evaluating current situations and the quality of target objects. However, it is difficult for even domain experts to formulate metrics, especially for data with complexity related to dimensionality and temporal characteristics. The proposed interface is designed by extending the concept of semantic interaction to consider the temporal characteristics of target data. It represents metrics as a linear combination of data attributes and provides a means for adjusting it through interactive VA. On an animated scatter plot, an analyst can directly manipulate several visualized objects, i.e., a node, a trajectory, and a convex hull, as the group of nodes and trajectories. The result of manipulating the objects is reflected in the linear combination of attributes, which corresponds to an axis of the scatter plot. Using the axes as the output of the analysis, analysts can formulate a metric. The effectiveness of the proposed interface is demonstrated through an example and evaluated by two user experiments on the basis of hypotheses obtained from the example.";
+
+  const wordChild = []
+
+  abstract.split(' ').forEach((word, i) => {
+    const found = wordChild.find((d) => d.name === word);
+    if (found) {
+      found["value"]++;
+    } else {
+      wordChild.push({
+        "name": word,
+        "value": 1
+      })
+    }
+  });
+
+  console.log(wordChild);
+
   const data = {
     "name": "Cloud A",
-    "children": [
-      { "name": "B", "value": 25 },
-      { "name": "G", "value": 12 },
-      { "name": "I", "value": 30 },
-      { "name": "J", "value": 10 },
-      { "name": "K", "value": 50 },
-      { "name": "D", "value": 10 },
-      { "name": "E", "value": 105 },
-      { "name": "F", "value": 10 }
-    ]
+    "children": wordChild.filter((d) => d.value > 1)
   };
 
   let root = d3.hierarchy(data);
@@ -65,7 +74,7 @@
 
   node.append("text")
     .style("text-anchor", function(d) { return d.children ? "end" : "middle"; })
-    .attr("font-size", "100%")
+    .attr("font-size", (d) => 10 * d.value)
     .text(function(d) { return d.children ? "" : d.data.name; });
 
   </script>
