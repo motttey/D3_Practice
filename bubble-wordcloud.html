@@ -8,7 +8,6 @@
   <body>
     <h1>D3 WordCloud Bubble</h1>
     <div id="bubble_div">
-      <svg id="bubble"></svg>
     </div>
   </body>
 
@@ -22,7 +21,7 @@
   // SVG要素を追加
   const svg = d3
     .select("#bubble_div")
-    .select("svg")
+    .append("svg")
     .attr("viewBox", "0 0 " + width  + " " + height)
     .attr("width", "100%")
     .attr("height", "100%")
@@ -62,7 +61,34 @@
     }
   });
 
-  console.log(wordChild);
+  const array = [abstract1, abstract2].map((abstract) => {
+    return getDict(abstract);
+  });
+  const pairArray = []
+
+  for (let i = 0; i < array.length; i++) {
+    for (let j = 0; j < array.length; j++) {
+      pairArray.push([array[i], array[j]]);
+    }
+  }
+
+  pairArray.forEach((array, i) => {
+    const keyUnion = [
+      ...new Set([...Object.keys(array[0]),
+      ...Object.keys(array[1])])
+    ]
+
+    const resArray = Array.from(keyUnion).map((word) => {
+      console.log(word);
+      return {
+        "name": word,
+        "value": ((array[0][word]) ? array[0][word] : 0
+          + (array[1][word]) ? array[1][word] : 0) / 2
+      }
+    });
+
+    console.log(resArray);
+  });
 
   const data = {
     "name": "Cloud A",
