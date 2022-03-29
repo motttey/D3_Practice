@@ -18,15 +18,6 @@
   const width = 1000;
   const height = 1000;
 
-  // SVG要素を追加
-  const svg = d3
-    .select("#bubble_div")
-    .append("svg")
-    .attr("viewBox", "0 0 " + width  + " " + height)
-    .attr("width", "100%")
-    .attr("height", "100%")
-    .attr("class", "packed_bubble_example");
-
   const abstract1 = "A visual analytics (VA) interface for formulating evaluation metrics of multi-dimensional time-series data is proposed. Evaluation metrics such as key performance indicators (KPI) are expected to play an important role in quantitatively evaluating current situations and the quality of target objects. However, it is difficult for even domain experts to formulate metrics, especially for data with complexity related to dimensionality and temporal characteristics. The proposed interface is designed by extending the concept of semantic interaction to consider the temporal characteristics of target data. It represents metrics as a linear combination of data attributes and provides a means for adjusting it through interactive VA. On an animated scatter plot, an analyst can directly manipulate several visualized objects, i.e., a node, a trajectory, and a convex hull, as the group of nodes and trajectories. The result of manipulating the objects is reflected in the linear combination of attributes, which corresponds to an axis of the scatter plot. Using the axes as the output of the analysis, analysts can formulate a metric. The effectiveness of the proposed interface is demonstrated through an example and evaluated by two user experiments on the basis of hypotheses obtained from the example.";
 
   const abstract2 = "This paper proposes a visual analytics (VA) interface for time-series data so that it can solve the problems arising from the property of time-series data: a collision between interaction and animation on the temporal aspect, collision of interaction between the temporal and spatial aspects, and the trade-off of exploration accuracy, efficiency, and scalability between different visualization methods. To solve these problems, this paper proposes a VA interface that can handle temporal and spatial changes uniformly. Trajectories can show temporal changes spatially, of which direct manipulation enables to examine the relationship among objects either at a certain time point or throughout the entire time range. The usefulness of the proposed interface is demonstrated through experiments.";
@@ -72,54 +63,64 @@
     }
   }
 
-  pairArray.forEach((array, i) => {
+  const generateCloud = (wordList) => {
+    // SVG要素を追加
+    const svg = d3
+      .select("#bubble_div")
+      .append("svg")
+      .attr("viewBox", "0 0 " + width  + " " + height)
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .attr("class", "packed_bubble_example");
+
+    const data = {
+      "name": "Cloud A",
+      "children": wordList.filter((d) => d.value > 1)
+    };
+
+    let root = d3.hierarchy(data);
+    root.sum((d) => { return d.value; });
+
+    let pack = d3.pack()
+      .size([width, height])
+      .padding(0);
+
+    pack(root);
+
+    let node = svg.selectAll(".node")
+    .data(root.descendants())
+    .enter()
+    .append("g")
+    .attr("transform", function(d) { return "translate(" + d.x + "," + (d.y) + ")"; });
+
+    let color = ["orange", "white", "yellow"];
+    node.append("circle")
+      .attr("r", function(d) { return d.r; })
+      .attr("stroke", "black")
+      .attr("fill", function(d) { return color[d.depth]; });
+
+    node.append("text")
+      .style("text-anchor", function(d) { return d.children ? "end" : "middle"; })
+      .attr("font-size", (d) => 10 * d.value)
+      .text(function(d) { return d.children ? "" : d.data.name; });
+  }
+
+  pairArray.map((array, i) => {
     const keyUnion = [
       ...new Set([...Object.keys(array[0]),
       ...Object.keys(array[1])])
     ]
 
-    const resArray = Array.from(keyUnion).map((word) => {
-      console.log(word);
+    return Array.from(keyUnion).map((word) => {
       return {
         "name": word,
         "value": ((array[0][word]) ? array[0][word] : 0
           + (array[1][word]) ? array[1][word] : 0) / 2
       }
     });
-
-    console.log(resArray);
+  }).forEach((wordList) => {
+    generateCloud(wordList)
   });
-
-  const data = {
-    "name": "Cloud A",
-    "children": wordChild.filter((d) => d.value > 1)
-  };
-
-  let root = d3.hierarchy(data);
-  root.sum((d) => { return d.value; });
-
-  let pack = d3.pack()
-    .size([width, height])
-    .padding(0);
-
-  pack(root);
-
-  let node = svg.selectAll(".node")
-  .data(root.descendants())
-  .enter()
-  .append("g")
-  .attr("transform", function(d) { return "translate(" + d.x + "," + (d.y) + ")"; });
-
-  let color = ["orange", "white", "yellow"];
-  node.append("circle")
-    .attr("r", function(d) { return d.r; })
-    .attr("stroke", "black")
-    .attr("fill", function(d) { return color[d.depth]; });
-
-  node.append("text")
-    .style("text-anchor", function(d) { return d.children ? "end" : "middle"; })
-    .attr("font-size", (d) => 10 * d.value)
-    .text(function(d) { return d.children ? "" : d.data.name; });
 
   </script>
 </hmtl>
