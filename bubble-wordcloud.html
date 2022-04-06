@@ -48,42 +48,38 @@
   });
   const pairArray = []
 
-  for (let i = 0; i < array.length; i++) {
-    for (let j = 0; j < array.length; j++) {
-      pairArray.push([array[i], array[j]]);
-    }
-  }
+  const svg = d3
+    .select("#bubble_div")
+    .append("svg")
+    .attr("viewBox", "0 0 " + width  + " " + height)
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("class", "packed_bubble_example");
 
-  const generateCloud = (wordList) => {
-    // SVG要素を追加
-    const svg = d3
-      .select("#bubble_div")
-      .append("svg")
-      .attr("viewBox", "0 0 " + width  + " " + height)
-      .attr("width", "100%")
-      .attr("height", "100%")
-      .attr("class", "packed_bubble_example");
-
+  const generateCloud = (wordList, i) => {
     const data = {
       "name": "Cloud A",
       "children": wordList.filter((d) => d.value > 1)
     };
 
     let root = d3.hierarchy(data);
-    root.sum((d) => { return d.value; });
+    root.sum((d) => d.value);
 
     let pack = d3.pack()
-      .size([width, height])
+      .size([400, 400])
       .padding(0);
 
     pack(root);
 
-    let node = svg.selectAll(".node")
+    const g = svg.append("g")
+      .attr("transform", `translate(${(i%2)*500},${Math.floor(i/2)*500})`);
+
+    let node = g.selectAll(".node")
       .data(root.descendants())
       .enter()
       .append("g")
       .attr("transform", (d) =>  {
-        return "translate(" + d.x + "," + (d.y) + ")"; }
+        return "translate(" + (d.x) + "," + (d.y) + ")"; }
       );
 
     let color = ["orange", "white", "yellow"];
@@ -97,7 +93,7 @@
     // dict1の大きさ
     node.append("circle")
       .attr("r", (d) => {
-        return (dict1[d.data.name]) ? 10 * dict1[d.data.name] : 0;
+        return (dict1[d.data.name]) ? 2 * dict1[d.data.name] : 0;
       })
       .attr("stroke", "red")
       .attr("fill", "none");
@@ -105,33 +101,33 @@
     // dict2の大きさ
     node.append("circle")
       .attr("r", (d) =>  {
-        return (dict2[d.data.name]) ? 10 * dict2[d.data.name] : 0;
+        return (dict2[d.data.name]) ? 2 * dict2[d.data.name] : 0;
       })
       .attr("stroke", "blue")
       .attr("fill", "none");
 
     node.append("text")
       .style("text-anchor", (d) =>  { return d.children ? "end" : "middle"; })
-      .attr("font-size", (d) => 10 * d.value)
+      .attr("font-size", (d) => 5 * d.value)
       .text((d) => { return d.children ? "" : d.data.name; });
   }
 
-  pairArray.map((array, i) => {
-    const keyUnion = [
-      ...new Set([...Object.keys(array[0]),
-      ...Object.keys(array[1])])
-    ]
-
-    return Array.from(keyUnion).map((word) => {
-      return {
-        "name": word,
-        "value": ((array[0][word]) ? array[0][word] : 0
-          + (array[1][word]) ? array[1][word] : 0)
-      }
-    });
-  }).forEach((wordList) => {
-    generateCloud(wordList)
+  // SVG要素を追加
+  d3.cross([dict1, dict2], [dict1, dict2])
+    .map((array, i) => {
+      const keyUnion = [
+        ...new Set([...Object.keys(array[0]),
+        ...Object.keys(array[1])])
+      ]
+      return Array.from(keyUnion).map((word) => {
+        return {
+          "name": word,
+          "value": ((array[0][word]) ? array[0][word] : 0
+            + (array[1][word]) ? array[1][word] : 0)
+        }
+      });
+  }).forEach((wordList, i) => {
+    generateCloud(wordList, i);
   });
-
   </script>
 </hmtl>
