@@ -84,16 +84,17 @@
 
     let color = ["orange", "white", "yellow"];
     node.append("circle")
-      .attr("r", function(d) { return d.r; })
+      .attr("r", (d) => { return d.r; })
       .attr("stroke", "black")
-      .attr("fill", function(d) {
+      .attr("fill", (d) => {
         return color[d.depth];
       });
 
     // dict1の大きさ
     node.append("circle")
       .attr("r", (d) => {
-        return (dict1[d.data.name]) ? 2 * dict1[d.data.name] : 0;
+        return (dict1[d.data.name]) ?
+          (d.r * (dict1[d.data.name]/d.data.value))/2 : 0;
       })
       .attr("stroke", "red")
       .attr("fill", "none");
@@ -101,7 +102,8 @@
     // dict2の大きさ
     node.append("circle")
       .attr("r", (d) =>  {
-        return (dict2[d.data.name]) ? 2 * dict2[d.data.name] : 0;
+        return (dict2[d.data.name]) ?
+          (d.r * (dict2[d.data.name]/d.data.value))/2 : 0;
       })
       .attr("stroke", "blue")
       .attr("fill", "none");
