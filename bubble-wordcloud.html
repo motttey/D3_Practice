@@ -79,7 +79,7 @@
       .enter()
       .append("g")
       .attr("transform", (d) =>  {
-        return "translate(" + (d.x) + "," + (d.y) + ")"; }
+        return "translate(" + (100 + d.x) + "," + (50 + d.y) + ")"; }
       );
 
     let color = ["orange", "white", "yellow"];
@@ -113,6 +113,29 @@
       .attr("font-size", (d) => 5 * d.value)
       .text((d) => { return d.children ? "" : d.data.name; });
   }
+
+  const xScale = d3.scaleOrdinal()
+    .domain(["dict1", "dict2"])
+    .range([250, width - 250]);
+
+  const yScale = d3.scaleOrdinal()
+    .domain(["dict1", "dict2"])
+    .range([250, height - 250]);
+
+  const xAxis = d3.axisBottom().scale(xScale);
+  const yAxis = d3.axisLeft().scale(yScale);
+
+  svg
+    .append("g")
+    .attr("id", "xAxis")
+    .attr("transform", "translate(" + 0 + ", " + (height - 25) + ")")
+    .call(xAxis);
+
+  svg
+    .append("g")
+    .attr("id", "yAxis")
+    .attr("transform", "translate(" + 50 + ", " + 0 + ")")
+    .call(yAxis);
 
   // SVG要素を追加
   d3.cross([dict1, dict2], [dict1, dict2])
