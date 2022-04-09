@@ -20,7 +20,7 @@
 
   const abstract1 = "A visual analytics (VA) interface for formulating evaluation metrics of multi-dimensional time-series data is proposed. Evaluation metrics such as key performance indicators (KPI) are expected to play an important role in quantitatively evaluating current situations and the quality of target objects. However, it is difficult for even domain experts to formulate metrics, especially for data with complexity related to dimensionality and temporal characteristics. The proposed interface is designed by extending the concept of semantic interaction to consider the temporal characteristics of target data. It represents metrics as a linear combination of data attributes and provides a means for adjusting it through interactive VA. On an animated scatter plot, an analyst can directly manipulate several visualized objects, i.e., a node, a trajectory, and a convex hull, as the group of nodes and trajectories. The result of manipulating the objects is reflected in the linear combination of attributes, which corresponds to an axis of the scatter plot. Using the axes as the output of the analysis, analysts can formulate a metric. The effectiveness of the proposed interface is demonstrated through an example and evaluated by two user experiments on the basis of hypotheses obtained from the example.";
 
-  const abstract2 = "This paper proposes a visual analytics (VA) interface for time-series data so that it can solve the problems arising from the property of time-series data: a collision between interaction and animation on the temporal aspect, collision of interaction between the temporal and spatial aspects, and the trade-off of exploration accuracy, efficiency, and scalability between different visualization methods. To solve these problems, this paper proposes a VA interface that can handle temporal and spatial changes uniformly. Trajectories can show temporal changes spatially, of which direct manipulation enables to examine the relationship among objects either at a certain time point or throughout the entire time range. The usefulness of the proposed interface is demonstrated through experiments.";
+  const abstract2 = "In this paper, to support metrics formulation of multi-dimensional time-series data by interactive VA, semantic interaction is extended to satisfy the above-mentioned R1-R3. In particular, a VA interface that expresses the metrics as a linear combination of attributes at an arbitrary time point or range is proposed. Via that VA interface, instances of target data are projected onto a 2D space (scatter plot), each axis of which corresponds to a basis for a metric. An instance in a dataset is represented as three types of visualized objects that are manipulatable by users: (1) a node representing an instance at a specific time point; (2) a trajectory representing the time-series of an instance; and (3) a convex hull representing a group of nodes and trajectories. Different types of visualized objects are associated with different temporal and spatial ranges: a node with a specific temporal and/or spatial point, a trajectory with a time range, and a convex hull with a spatial region; this association contributes to the efficient exploration of the target data. Visualized objects of instances can be moved to arbitrary positions on a scatter plot so that the data distribution on the scatter plot reflects the criteria that the user supposes. The positions of objects on the scatter plot are modeled with global and local parameters, which are used to update the axes. By iteratively adjusting these parameters, the analyst can incrementally acquire ideas for metrics formulation. As an example of applying the proposed interface to real-world data, metrics formulation using statistical data of a baseball game are presented hereafter. On the basis of the hypothesis obtained through the example, the effectiveness of the proposed interface was experimentally evaluated. The participants in the experiment were asked to use the prototype interface to find similar instances of multi-dimensional time-series data and adjust the linear functions corresponding to the axes of the scatter plot. The experimental results show that the prototype interface enables exploration of multi-dimensional time-series data by appropriately combining target visualized objects. Using the proposed interface, the participants could efficiently reflect their intentions as a data distribution on the scatter plot.";
 
   const wordChild = []
 
@@ -28,7 +28,9 @@
     const dict = {};
     const replaced = abstract.replace(new RegExp("[.,:]", "gm"), "");
     replaced.split(' ')
+      .map((word) => word.toLowerCase())
       .filter((word) => word.length > 2)
+      .filter((word) => !["the", "are", "and"].includes(word))
       .forEach((word, i) => {
         if (dict[word]) {
           dict[word]++;
@@ -41,7 +43,6 @@
 
   const dict1 = getDict(abstract1);
   const dict2 = getDict(abstract2);
-  console.log(dict1, dict2);
 
   const array = [abstract1, abstract2].map((abstract) => {
     return getDict(abstract);
@@ -50,7 +51,7 @@
 
   const packed_size = 400;
   const offset = 50;
-  const font_magnify = 5;
+  const font_magnify = 3;
 
   const svg = d3
     .select("#bubble_div")
@@ -77,8 +78,8 @@
 
     const g = svg.append("g")
       .attr("transform", `translate(
-        ${(i%2)*(packed_size+offset*2)},
-        ${Math.floor(i/2)*(packed_size+offset*2)}
+        ${Math.floor(i/2)*(packed_size+offset*2)},
+        ${(i%2)*(packed_size+offset*2)}
       )`);
 
     let node = g.selectAll(".node")
@@ -97,11 +98,13 @@
         return color[d.depth];
       });
 
+    console.log(wordList);
+
     // dict1の大きさ
     node.append("circle")
       .attr("r", (d) => {
         return (dict1[d.data.name]) ?
-          (d.r * (dict1[d.data.name]/d.data.value))/2 : 0;
+          (d.r/2 * (dict1[d.data.name]/d.data.value)) : 0;
       })
       .attr("stroke", "red")
       .attr("fill", "none");
@@ -110,7 +113,7 @@
     node.append("circle")
       .attr("r", (d) =>  {
         return (dict2[d.data.name]) ?
-          (d.r * (dict2[d.data.name]/d.data.value))/2 : 0;
+          (d.r/2 * (dict2[d.data.name]/d.data.value)) : 0;
       })
       .attr("stroke", "blue")
       .attr("fill", "none");
@@ -145,17 +148,21 @@
     .call(yAxis);
 
   // SVG要素を追加
-  d3.cross([dict1, dict2], [dict1, dict2])
+  d3.cross([dict1, dict2], [dict2, dict1])
     .map((array, i) => {
       const keyUnion = [
-        ...new Set([...Object.keys(array[0]),
-        ...Object.keys(array[1])])
+        ...new Set([
+          ...Object.keys(array[0]),
+          ...Object.keys(array[1])
+        ])
       ]
       return Array.from(keyUnion).map((word) => {
         return {
           "name": word,
-          "value": ((array[0][word]) ? array[0][word] : 0
-            + (array[1][word]) ? array[1][word] : 0)
+          "value": (
+            (array[0][word]) ? array[0][word] : 0
+            + (array[1][word]) ? array[1][word] : 0
+          )
         }
       });
   }).forEach((wordList, i) => {
