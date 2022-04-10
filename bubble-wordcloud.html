@@ -26,7 +26,7 @@
 
   const getDict = (abstract) => {
     const dict = {};
-    const replaced = abstract.replace(new RegExp("[.,:]", "gm"), "");
+    const replaced = abstract.replace(new RegExp("[.,:()]", "gm"), "");
     replaced.split(' ')
       .map((word) => word.toLowerCase())
       .filter((word) => word.length > 2)
@@ -75,11 +75,11 @@
       .padding(0);
 
     pack(root);
-
+  
     const g = svg.append("g")
       .attr("transform", `translate(
-        ${Math.floor(i/2)*(packed_size+offset*2)},
-        ${(i%2)*(packed_size+offset*2)}
+        ${(i%2)*(packed_size+offset*2)},
+        ${(i%3 === 0? 0: 1) *(packed_size+offset*2)}
       )`);
 
     let node = g.selectAll(".node")
@@ -98,25 +98,25 @@
         return color[d.depth];
       });
 
-    console.log(wordList);
+    if (Math.floor(i/2) !== 0) {
+      // dict1の大きさ
+      node.append("circle")
+        .attr("r", (d) => {
+          return (dict1[d.data.name]) ?
+            (d.r/2 * (dict1[d.data.name]/d.data.value)) : 0;
+        })
+        .attr("stroke", "red")
+        .attr("fill", "none");
 
-    // dict1の大きさ
-    node.append("circle")
-      .attr("r", (d) => {
-        return (dict1[d.data.name]) ?
-          (d.r/2 * (dict1[d.data.name]/d.data.value)) : 0;
-      })
-      .attr("stroke", "red")
-      .attr("fill", "none");
-
-    // dict2の大きさ
-    node.append("circle")
-      .attr("r", (d) =>  {
-        return (dict2[d.data.name]) ?
-          (d.r/2 * (dict2[d.data.name]/d.data.value)) : 0;
-      })
-      .attr("stroke", "blue")
-      .attr("fill", "none");
+      // dict2の大きさ
+      node.append("circle")
+        .attr("r", (d) =>  {
+          return (dict2[d.data.name]) ?
+            (d.r/2 * (dict2[d.data.name]/d.data.value)) : 0;
+        })
+        .attr("stroke", "blue")
+        .attr("fill", "none");
+    }
 
     node.append("text")
       .style("text-anchor", (d) =>  { return d.children ? "end" : "middle"; })
