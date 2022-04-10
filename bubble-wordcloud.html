@@ -44,14 +44,11 @@
   const dict1 = getDict(abstract1);
   const dict2 = getDict(abstract2);
 
-  const array = [abstract1, abstract2].map((abstract) => {
-    return getDict(abstract);
-  });
-  const pairArray = []
-
   const packed_size = 400;
   const offset = 50;
   const font_magnify = 3;
+  const matrix_size = 2;
+  const circle_size = packed_size + offset * 2;
 
   const svg = d3
     .select("#bubble_div")
@@ -75,11 +72,11 @@
       .padding(0);
 
     pack(root);
-  
+
     const g = svg.append("g")
       .attr("transform", `translate(
-        ${(i%2)*(packed_size+offset*2)},
-        ${(i%3 === 0? 0: 1) *(packed_size+offset*2)}
+        ${(i % matrix_size) * (circle_size)},
+        ${(i % (matrix_size + 1) === 0? 0 : 1) * (circle_size)}
       )`);
 
     let node = g.selectAll(".node")
@@ -98,7 +95,7 @@
         return color[d.depth];
       });
 
-    if (Math.floor(i/2) !== 0) {
+    if (Math.floor(i/matrix_size) !== 0) {
       // dict1の大きさ
       node.append("circle")
         .attr("r", (d) => {
@@ -126,11 +123,11 @@
 
   const xScale = d3.scaleOrdinal()
     .domain(["dict1", "dict2"])
-    .range([(packed_size + offset*2)/2, width - (packed_size + offset*2)/2]);
+    .range([(circle_size)/2, width - (circle_size)/2]);
 
   const yScale = d3.scaleOrdinal()
     .domain(["dict1", "dict2"])
-    .range([(packed_size + offset*2)/2, height - (packed_size + offset*2)/2]);
+    .range([(circle_size)/2, height - (circle_size)/2]);
 
   const xAxis = d3.axisBottom().scale(xScale);
   const yAxis = d3.axisLeft().scale(yScale);
