@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <meta charset="utf-8"/>
+    <title>D3 WordCloud Bubble</title>
+  </head>
+  <body>
+    <h1>D3 WordCloud Bubble</h1>
+    <div id="bubble_div">
+    </div>
+  </body>
+
+  <style>
+  </style>
+
+  <script>
+  const width = 1000;
+  const height = 1000;
+
+  const conclusion = "We proposed a VA interface of metrics formulation for multi-dimensional time-series data. An example using statistical data of a baseball game showed how the proposed interface can support the process of metrics formulation. The results of the experiments with participants confirmed that the combination of different types of visualized objects (nodes, trajectories, and convex hulls) makes it possible to explore multi-dimensional time-series data, and the combination of absolute manipulation, relative manipulation, and manual parameter adjustment makes it possible to fine-tune the weights of attributes acquired from PCA. Therefore, we think that the proposed interface can support the task of metrics formulation for multi-dimensional time-series data. The proposed interface is the first attempt at providing VA to support these tasks: we expect the results obtained in this study to promote discussions on the extension of semantic interaction towards time-series data. To extend the proposed interface for covering a wide range of metrics and data types, an integrated framework that includes preprocessing and multiple dimensionality-reduction algorithms should be considered in future works. In addition to performing additional experiments to quantitatively evaluate the usability of the interface, as discussed in Sec. VII-A, we plan to do long-term case studies with domain experts to qualitatively verify the effectiveness of the proposed interface and the advantages against other VA interfaces.";
+
+  const introduction = "In this paper, to support metrics formulation of multi-dimensional time-series data by interactive VA, semantic interaction is extended to satisfy the above-mentioned R1-R3. In particular, a VA interface that expresses the metrics as a linear combination of attributes at an arbitrary time point or range is proposed. Via that VA interface, instances of target data are projected onto a 2D space (scatter plot), each axis of which corresponds to a basis for a metric. An instance in a dataset is represented as three types of visualized objects that are manipulatable by users: (1) a node representing an instance at a specific time point; (2) a trajectory representing the time-series of an instance; and (3) a convex hull representing a group of nodes and trajectories. Different types of visualized objects are associated with different temporal and spatial ranges: a node with a specific temporal and/or spatial point, a trajectory with a time range, and a convex hull with a spatial region; this association contributes to the efficient exploration of the target data. Visualized objects of instances can be moved to arbitrary positions on a scatter plot so that the data distribution on the scatter plot reflects the criteria that the user supposes. The positions of objects on the scatter plot are modeled with global and local parameters, which are used to update the axes. By iteratively adjusting these parameters, the analyst can incrementally acquire ideas for metrics formulation. As an example of applying the proposed interface to real-world data, metrics formulation using statistical data of a baseball game are presented hereafter. On the basis of the hypothesis obtained through the example, the effectiveness of the proposed interface was experimentally evaluated. The participants in the experiment were asked to use the prototype interface to find similar instances of multi-dimensional time-series data and adjust the linear functions corresponding to the axes of the scatter plot. The experimental results show that the prototype interface enables exploration of multi-dimensional time-series data by appropriately combining target visualized objects. Using the proposed interface, the participants could efficiently reflect their intentions as a data distribution on the scatter plot.";
+
+  const wordChild = []
+
+  const getDict = (abstract) => {
+    const dict = {};
+    const replaced = abstract.replace(new RegExp("[.,:()]", "gm"), "");
+    replaced.split(' ')
+      .map((word) => word.toLowerCase())
+      .filter((word) => word.length > 2)
+      .filter((word) => !["the", "are", "and"].includes(word))
+      .forEach((word, i) => {
+        if (dict[word]) {
+          dict[word]++;
+        } else {
+          dict[word] = 1;
+        }
+      });
+    return dict;
+  }
+
+  const dict1 = getDict(conclusion);
+  const dict2 = getDict(introduction);
+
+  const packed_size = 400;
+  const offset = 50;
+  const font_magnify = 3;
+  const matrix_size = 2;
+  const circle_size = packed_size + offset * 2;
+
+  const svg = d3
+    .select("#bubble_div")
+    .append("svg")
+    .attr("viewBox", "0 0 " + width  + " " + height)
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("class", "packed_bubble_example");
+
+  const generateCloud = (wordList, i) => {
+    const data = {
+      "name": "Cloud A",
+      "children": wordList.filter((d) => d.value >= 1)
+    };
+
+    let root = d3.hierarchy(data);
+    root.sum((d) => d.value);
+
+    let pack = d3.pack()
+      .size([packed_size, packed_size])
+      .padding(0);
+
+    pack(root);
+
+    const g = svg.append("g")
+      .attr("transform", `translate(
+        ${(i % matrix_size) * (circle_size)},
+        ${(i % (matrix_size + 1) === 0 ? 1 : 0) * (circle_size)}
+      )`);
+
+    let node = g.selectAll(".node")
+      .data(root.descendants())
+      .enter()
+      .append("g")
+      .attr("transform", (d) =>  {
+        return "translate(" + (offset*2 + d.x) + "," + (offset + d.y) + ")"; }
+      );
+
+    let color = ["orange", "white", "yellow"];
+    node.append("circle")
+      .attr("r", (d) => { return d.r; })
+      .attr("stroke", "black")
+      .attr("fill", (d) => {
+        return color[d.depth];
+      });
+
+    node.append("text")
+      .style("text-anchor", (d) =>  { return d.children ? "end" : "middle"; })
+      .attr("font-size", (d) => font_magnify * d.value)
+      .text((d) => { return d.children ? "" : d.data.name; });
+  }
+
+  const xScale = d3.scaleOrdinal()
+    .domain(["dict1", "dict2"])
+    .range([(circle_size)/2, width - (circle_size)/2]);
+
+  const yScale = d3.scaleOrdinal()
+    .domain(["dict1", "dict2"])
+    .range([(circle_size)/2, height - (circle_size)/2]);
+
+  const xAxis = d3.axisBottom().scale(xScale);
+  const yAxis = d3.axisLeft().scale(yScale);
+
+  svg
+    .append("g")
+    .attr("id", "xAxis")
+    .attr("transform", "translate(" + 0 + ", " + (height - offset/2) + ")")
+    .call(xAxis);
+
+  svg
+    .append("g")
+    .attr("id", "yAxis")
+    .attr("transform", "translate(" + offset + ", " + 0 + ")")
+    .call(yAxis);
+
+  // SVG要素を追加
+  d3.cross([dict1, dict2], [dict2, dict1])
+    .map((array, i) => {
+      const key1 = Object.keys(array[0]);
+      const key2 = Object.keys(array[1]);
+
+      const keyDiff = key1.filter((val1) => !key2.includes(val1));
+      const keyArray = (keyDiff.length > 0) ? keyDiff : key1;
+
+      return Array.from(keyArray).map((word) => {
+        return {
+          "name": word,
+          "value": (
+            (array[0][word]) ? array[0][word] : 0
+          )
+        }
+      });
+  }).forEach((wordList, i) => {
+    console.log(wordList);
+    generateCloud(wordList, i);
+  });
+  </script>
+</hmtl>
