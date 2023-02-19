@@ -76,7 +76,7 @@
     const g = svg.append("g")
       .attr("transform", `translate(
         ${(i % matrix_size) * (circle_size)},
-        ${(i % (matrix_size + 1) === 0? 0 : 1) * (circle_size)}
+        ${(i % (matrix_size + 1) === 0 ? 0 : 1) * (circle_size)}
       )`);
 
     let node = g.selectAll(".node")
@@ -84,7 +84,7 @@
       .enter()
       .append("g")
       .attr("transform", (d) =>  {
-        return "translate(" + (offset*2 + d.x) + "," + (offset + d.y) + ")"; }
+        return "translate(" + (offset * 2 + d.x) + "," + (offset + d.y) + ")"; }
       );
 
     let color = ["orange", "white", "yellow"];
@@ -123,11 +123,11 @@
 
   const xScale = d3.scaleOrdinal()
     .domain(["dict1", "dict2"])
-    .range([(circle_size)/2, width - (circle_size)/2]);
+    .range([circle_size / 2, width - circle_size / 2]);
 
   const yScale = d3.scaleOrdinal()
     .domain(["dict1", "dict2"])
-    .range([(circle_size)/2, height - (circle_size)/2]);
+    .range([circle_size / 2, height - circle_size / 2]);
 
   const xAxis = d3.axisBottom().scale(xScale);
   const yAxis = d3.axisLeft().scale(yScale);
@@ -135,7 +135,7 @@
   svg
     .append("g")
     .attr("id", "xAxis")
-    .attr("transform", "translate(" + 0 + ", " + (height - offset/2) + ")")
+    .attr("transform", "translate(" + 0 + ", " + (height - offset / 2) + ")")
     .call(xAxis);
 
   svg
