@@ -23,8 +23,58 @@
   const margin = {top: 50, right: 50, bottom: 50, left: 50};
 
   const xScale = d3.scaleTime()
-    .domain([new Date(2023, 1, 1), new Date(2023, 1, 10)])
+    .domain([new Date(2023, 0, 1), new Date(2023, 0, 3)])
     .range([margin.left, width - margin.right]);
+
+
+  const data = [
+    {
+      year: 2023,
+      month: 1,
+      day: 2,
+      words: [
+        {
+          word: "hoge",
+          score: 20
+        },
+        {
+          word: "fuga",
+          score: 10
+        },
+        {
+          word: "piyo",
+          score: 20
+        },
+        {
+          word: "foo",
+          score: 10
+        }
+      ]
+    },
+    {
+      year: 2023,
+      month: 1,
+      day: 3,
+      words: [
+        {
+          word: "hoge",
+          score: 15
+        },
+        {
+          word: "fuga",
+          score: 15
+        },
+        {
+          word: "piyo",
+          score: 20
+        },
+        {
+          word: "foo",
+          score: 10
+        }
+      ]
+    }
+  ];
 
   // SVG要素を追加
   const svg = d3
@@ -41,4 +91,40 @@
       .attr("transform", "translate(0," + (height - margin.bottom) + ")")
       .call(d3.axisBottom(xScale).ticks(d3.timeDay));
 
+  data.forEach((d) => {
+    const xStart = xScale(new Date(d.year, d.month - 1, d.day - 1));
+    const xEnd = xScale(new Date(d.year, d.month - 1, d.day));
+
+    const g = svg.append("g")
+      .attr("class", "wordCloudTimeSeries")
+      .attr("width", xEnd - xStart)
+      .attr("height", height - margin.top - margin.bottom)
+      .attr("transform", "translate(" + (xStart + margin.left) + ", " + (height/2 + margin.top + margin.bottom) + ")")
+
+    const color = d3.scaleLinear()
+      .domain([0,10])
+      .range(["gainsboro", "black"]);
+
+    const draw = (words) => {
+      g.selectAll("text")
+        .data(d.words)
+        .enter()
+        .append("text")
+        .style("font-size", (d) => { return d.size + "px"; })
+        .style("fill", (d, i) => { return color(i); })
+        .attr("transform", (d) => {
+            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text((d) => { return d.word; });
+    };
+
+    const layout = d3.layout.cloud()
+      .size([xEnd - xStart, height - margin.bottom])
+      .words(d.words)
+      .padding(2.5)
+      .rotate(0)
+      .fontSize((d) => d.score)
+      .on("end", draw)
+      .start();
+  });
 </script>
