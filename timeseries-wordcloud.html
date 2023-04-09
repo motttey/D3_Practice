@@ -23,58 +23,22 @@
   const margin = {top: 50, right: 50, bottom: 50, left: 50};
 
   const xScale = d3.scaleTime()
-    .domain([new Date(2023, 0, 1), new Date(2023, 0, 3)])
+    .domain([new Date(2023, 0, 1), new Date(2023, 0, 5)])
     .range([margin.left, width - margin.right]);
 
-
-  const data = [
-    {
-      year: 2023,
-      month: 1,
-      day: 2,
-      words: [
-        {
-          word: "hoge",
-          score: 20
-        },
-        {
-          word: "fuga",
-          score: 10
-        },
-        {
-          word: "piyo",
-          score: 20
-        },
-        {
-          word: "foo",
-          score: 10
-        }
-      ]
-    },
-    {
-      year: 2023,
-      month: 1,
-      day: 3,
-      words: [
-        {
-          word: "hoge",
-          score: 15
-        },
-        {
-          word: "fuga",
-          score: 15
-        },
-        {
-          word: "piyo",
-          score: 20
-        },
-        {
-          word: "foo",
-          score: 10
-        }
-      ]
+  // 30日間のデータを作成する
+  const data = [];
+  for (let day = 1; day <= 5; day++) {
+    const words = [];
+    const numWords = Math.floor(Math.random() * 6) + 5; // 5~10の単語数
+    for (let i = 0; i < numWords; i++) {
+      const wordList = ["hoge", "fuga", "piyo", "foo", "bar"];
+      const wordIndex = Math.floor(Math.random() * wordList.length);
+      const score = Math.floor(Math.random() * 30); // 0~30のスコア
+      words.push({ word: wordList[wordIndex], score });
     }
-  ];
+    data.push({ year: 2023, month: 1, day, words });
+  }
 
   // SVG要素を追加
   const svg = d3
