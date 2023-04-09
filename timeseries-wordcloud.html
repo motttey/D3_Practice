@@ -22,9 +22,15 @@
   const height = 800;
   const margin = {top: 50, right: 50, bottom: 50, left: 50};
 
+  const maxDate = 30;
+  const maxValue = 30;
   const xScale = d3.scaleTime()
-    .domain([new Date(2023, 0, 1), new Date(2023, 0, 3)])
+    .domain([new Date(2023, 0, 1), new Date(2023, 0, maxDate)])
     .range([margin.left, width - margin.right]);
+
+  const yScale = d3.scaleLinear()
+    .domain([0, maxValue])
+    .range([0, height - margin.bottom]);
 
   // 30日間のデータを作成する
   const wordsList = [
@@ -32,12 +38,12 @@
   ];
 
   const data = [];
-  for (let day = 1; day <= 30; day++) {
+  for (let day = 1; day <= maxDate; day++) {
     const words = [];
     const numWords = Math.floor(Math.random() * 6) + 5; // 5~10の単語数
     for (let i = 0; i < numWords; i++) {
       const wordIndex = Math.floor(Math.random() * wordsList.length);
-      const score = Math.floor(Math.random() * 31); // 0~30のスコア
+      const score = Math.floor(Math.random() * maxValue); // 0~30のスコア
       words.push({ word: wordsList[wordIndex], score });
     }
     const value = Math.floor(Math.random() * 10)
@@ -57,7 +63,21 @@
     .attr("class", "timeAxis")
     .attr("class", "axisBottom")
     .attr("transform", "translate(0," + (height - margin.bottom) + ")")
-    .call(d3.axisBottom(xScale).ticks(d3.timeDay));
+    .call(d3.axisBottom(xScale).ticks(d3.timeWeek));
+
+  const lineChart = svg.append("g")
+    .attr("class", "lineChart");
+
+  const line = d3.line()
+    .x((d) => xScale(new Date(d.year, d.month - 1, d.day - 1)))
+    .y((d) => yScale(d.value));
+
+  const path = lineChart.append("path")
+    // dataをセット
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", "red")
+    .attr("d", line);
 
   data.forEach((d) => {
     const xStart = xScale(new Date(d.year, d.month - 1, d.day - 1));
@@ -81,7 +101,7 @@
         .style("font-size", (d) => { return d.size + "px"; })
         .style("fill", (d, i) => { return color(i); })
         .attr("transform", (d) => {
-            return "translate(" + [d.x, d.y] + ") rotate(" + d.rotate + ")";
+          return "translate(" + [d.x, d.y] + ") rotate(" + d.rotate + ")";
         })
         .text((d) => { return d.word; });
     };
