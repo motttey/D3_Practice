@@ -23,21 +23,25 @@
   const margin = {top: 50, right: 50, bottom: 50, left: 50};
 
   const xScale = d3.scaleTime()
-    .domain([new Date(2023, 0, 1), new Date(2023, 0, 5)])
+    .domain([new Date(2023, 0, 1), new Date(2023, 0, 3)])
     .range([margin.left, width - margin.right]);
 
   // 30日間のデータを作成する
+  const wordsList = [
+    "リバティアイランド", "才木","セカンド松田","セイウンハーデス","ドゥラメンテ","アラーノ","平安藤原","甲斐キャノン","テイエムベンチャー","エラン","パトリッキ","タイチサン","東ちづる","代打の神様","ソンリョン","広輔","戸柱","仮面の世界","ブエナビスタ","レオセアラ"
+  ];
+
   const data = [];
-  for (let day = 1; day <= 5; day++) {
+  for (let day = 1; day <= 30; day++) {
     const words = [];
     const numWords = Math.floor(Math.random() * 6) + 5; // 5~10の単語数
     for (let i = 0; i < numWords; i++) {
-      const wordList = ["hoge", "fuga", "piyo", "foo", "bar"];
-      const wordIndex = Math.floor(Math.random() * wordList.length);
-      const score = Math.floor(Math.random() * 30); // 0~30のスコア
-      words.push({ word: wordList[wordIndex], score });
+      const wordIndex = Math.floor(Math.random() * wordsList.length);
+      const score = Math.floor(Math.random() * 31); // 0~30のスコア
+      words.push({ word: wordsList[wordIndex], score });
     }
-    data.push({ year: 2023, month: 1, day, words });
+    const value = Math.floor(Math.random() * 10)
+    data.push({ year: 2023, month: 1, day, words, value });
   }
 
   // SVG要素を追加
@@ -50,10 +54,10 @@
     .attr("class", "wordcloud");
 
   svg.append("g")
-      .attr("class", "timeAxis")
-      .attr("class", "axisBottom")
-      .attr("transform", "translate(0," + (height - margin.bottom) + ")")
-      .call(d3.axisBottom(xScale).ticks(d3.timeDay));
+    .attr("class", "timeAxis")
+    .attr("class", "axisBottom")
+    .attr("transform", "translate(0," + (height - margin.bottom) + ")")
+    .call(d3.axisBottom(xScale).ticks(d3.timeDay));
 
   data.forEach((d) => {
     const xStart = xScale(new Date(d.year, d.month - 1, d.day - 1));
@@ -77,15 +81,15 @@
         .style("font-size", (d) => { return d.size + "px"; })
         .style("fill", (d, i) => { return color(i); })
         .attr("transform", (d) => {
-            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+            return "translate(" + [d.x, d.y] + ") rotate(" + d.rotate + ")";
         })
         .text((d) => { return d.word; });
     };
 
     const layout = d3.layout.cloud()
-      .size([xEnd - xStart, height - margin.bottom])
+      .size([xEnd - xStart, height/2 - margin.bottom])
       .words(d.words)
-      .padding(2.5)
+      .padding(1)
       .rotate(0)
       .fontSize((d) => d.score)
       .on("end", draw)
