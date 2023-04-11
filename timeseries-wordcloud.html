@@ -18,8 +18,8 @@
 </style>
 
 <script>
-  const width = 800;
-  const height = 800;
+  const width = 1200;
+  const height = 600;
   const margin = {top: 50, right: 50, bottom: 50, left: 50};
 
   const maxDate = 30;
@@ -34,16 +34,35 @@
 
   // 30日間のデータを作成する
   const wordsList = [
-    "リバティアイランド", "才木","セカンド松田","セイウンハーデス","ドゥラメンテ","アラーノ","平安藤原","甲斐キャノン","テイエムベンチャー","エラン","パトリッキ","タイチサン","東ちづる","代打の神様","ソンリョン","広輔","戸柱","仮面の世界","ブエナビスタ","レオセアラ"
+    "リバティアイランド",
+    "才木",
+    "セカンド松田",
+    "セイウンハーデス",
+    "ドゥラメンテ",
+    "アラーノ",
+    "平安藤原",
+    "甲斐キャノン",
+    "テイエムベンチャー",
+    "エラン",
+    "パトリッキ",
+    "タイチサン",
+    "東ちづる",
+    "代打の神様",
+    "ソンリョン",
+    "広輔",
+    "戸柱",
+    "仮面の世界",
+    "ブエナビスタ",
+    "レオセアラ"
   ];
 
   const data = [];
   for (let day = 1; day <= maxDate; day++) {
     const words = [];
-    const numWords = Math.floor(Math.random() * 6) + 5; // 5~10の単語数
+    const numWords = Math.floor(Math.random() * 6) + 5;
     for (let i = 0; i < numWords; i++) {
       const wordIndex = Math.floor(Math.random() * wordsList.length);
-      const score = Math.floor(Math.random() * maxValue); // 0~30のスコア
+      const score = Math.floor(Math.random() * maxValue);
       words.push({ word: wordsList[wordIndex], score });
     }
     const value = Math.floor(Math.random() * 10)
@@ -59,7 +78,7 @@
     .attr("transform", "translate(" + margin.left + ", " + margin.bottom + ")")
     .attr("class", "wordcloud");
 
-  svg.append("g")
+  const timeSeriesAxis = svg.append("g")
     .attr("class", "timeAxis")
     .attr("transform", "translate(0," + (height - margin.bottom) + ")")
     .call(d3.axisBottom(xScale).ticks(d3.timeWeek));
@@ -74,12 +93,17 @@
   const path = lineChart.append("path")
     // dataをセット
     .datum(data)
+    .attr("class", "dataPath")
     .attr("fill", "none")
     .attr("stroke", "red")
     .attr("d", line);
 
+  const color = d3.scaleLinear()
+    .domain([0, 10])
+    .range(["gainsboro", "black"]);
+
   for (let i = 1; i <= maxDate; i = i + 7) {
-    const endIndex = (i + 7 < maxDate) ? i + 7 - 1 : maxDate - 1; 
+    const endIndex = (i + 7 < maxDate) ? i + 7 : maxDate - 1; 
     const startDateData = data[i];
     const endDateData = data[endIndex];
 
@@ -98,24 +122,20 @@
         }
       });
     }
-    const groupedWordList = Object.entries(aggWords).map(([word, score]) => ({ word, score }))
-    console.log(groupedWordList)
+
+    const groupedWordList = Object.entries(aggWords).map(([word, score]) => ({word, score}))
 
     const g = svg.append("g")
       .attr("class", "wordCloudTimeSeries")
       .attr("width", xEnd - xStart)
       .attr("height", height - margin.top - margin.bottom)
-      .attr("transform", "translate(" + (xStart + margin.left) + ", " + (height/2 + margin.top + margin.bottom) + ")")
-
-    const color = d3.scaleLinear()
-      .domain([0,10])
-      .range(["gainsboro", "black"]);
+      .attr("transform", "translate(" + (xStart + margin.left) + ", " + (height / 2 + margin.top + margin.bottom) + ")")
 
     const thresholdLine = svg.append("line")
       .attr("class", "thresholdLine")
       .attr("x1", xStart)
       .attr("x2", xStart)
-      .attr("y1", height/2)
+      .attr("y1", margin.top)
       .attr("y2", height - margin.bottom)
       .attr("stroke-width", 1)
       .attr("stroke", "lightgray");
@@ -127,7 +147,7 @@
         .enter()
         .append("text")
         .style("font-size", (d) => { return Math.floor(d.size/2) + "px"; })
-        .style("fill", (d, i) => { return color(i); })
+        .style("fill", (_, i) => { return color(i); })
         .attr("transform", (d) => {
           return "translate(" + [d.x, d.y] + ") rotate(" + d.rotate + ")";
         })
@@ -135,7 +155,7 @@
     };
   
     const layout = d3.layout.cloud()
-      .size([xEnd - xStart, height/2 - margin.bottom])
+      .size([xEnd - xStart, height / 2 - margin.bottom])
       .words(groupedWordList)
       .padding(1)
       .rotate(0)
