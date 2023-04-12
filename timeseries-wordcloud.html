@@ -102,14 +102,15 @@
     .domain([0, 10])
     .range(["gainsboro", "black"]);
 
-  for (let i = 1; i <= maxDate; i = i + 7) {
-    const endIndex = (i + 7 < maxDate) ? i + 7 : maxDate - 1; 
+  const wordadding = 2;
+  const maxDatePeriod = 7;
+  for (let i = 1; i <= maxDate; i = i + maxDatePeriod) {
+    const endIndex = (i + maxDatePeriod < maxDate) ? i + maxDatePeriod : maxDate - 1; 
     const startDateData = data[i];
     const endDateData = data[endIndex];
 
     const xStart = xScale(new Date(startDateData.year, startDateData.month - 1, startDateData.day - 1));
     const xEnd = xScale(new Date(endDateData.year, endDateData.month - 1, endDateData.day));
-    console.log(endIndex, xStart, xEnd)
 
     const aggWords = {};
     for (let j = i; j < endIndex; j++) {
@@ -127,9 +128,9 @@
 
     const g = svg.append("g")
       .attr("class", "wordCloudTimeSeries")
-      .attr("width", xEnd - xStart)
+      .attr("width", xEnd - xStart - margin.left)
       .attr("height", height - margin.top - margin.bottom)
-      .attr("transform", "translate(" + (xStart + margin.left) + ", " + (height / 2 + margin.top + margin.bottom) + ")")
+      .attr("transform", "translate(" + (xStart + margin.right +  margin.left) + ", " + (height / 2 + margin.top + margin.bottom) + ")")
 
     const thresholdLine = svg.append("line")
       .attr("class", "thresholdLine")
@@ -146,7 +147,7 @@
         .data(words)
         .enter()
         .append("text")
-        .style("font-size", (d) => { return Math.floor(d.size/2) + "px"; })
+        .style("font-size", (d) => { return Math.floor(Math.sqrt(d.size)) * 2 + "px"; })
         .style("fill", (_, i) => { return color(i); })
         .attr("transform", (d) => {
           return "translate(" + [d.x, d.y] + ") rotate(" + d.rotate + ")";
@@ -157,8 +158,9 @@
     const layout = d3.layout.cloud()
       .size([xEnd - xStart, height / 2 - margin.bottom])
       .words(groupedWordList)
-      .padding(1)
+      .padding(wordadding)
       .rotate(0)
+      .spiral(["rectangular"])
       .fontSize((d) => d.score)
       .on("end", draw)
       .start();
