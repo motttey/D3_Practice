@@ -104,6 +104,8 @@
 
   const wordadding = 2;
   const maxDatePeriod = 7;
+  const fontMax = 16;
+  const fontMin = 4;
   for (let i = 1; i <= maxDate; i = i + maxDatePeriod) {
     const endIndex = (i + maxDatePeriod < maxDate) ? i + maxDatePeriod : maxDate - 1; 
     const startDateData = data[i];
@@ -125,12 +127,22 @@
     }
 
     const groupedWordList = Object.entries(aggWords).map(([word, score]) => ({word, score}))
+    const fontScale = d3.scaleLinear()
+      .domain([
+        Math.min(...groupedWordList.map((d) => d.score)),
+        Math.max(...groupedWordList.map((d) => d.score))
+      ])
+      .range([fontMin, fontMax])
 
     const g = svg.append("g")
       .attr("class", "wordCloudTimeSeries")
       .attr("width", xEnd - xStart - margin.left)
       .attr("height", height - margin.top - margin.bottom)
-      .attr("transform", "translate(" + (xStart + margin.right +  margin.left) + ", " + (height / 2 + margin.top + margin.bottom) + ")")
+      .attr("transform", "translate(" 
+        + (xStart + margin.right +  margin.left) 
+        + ", " + (height / 2 + margin.top + margin.bottom) 
+        + ")"
+      )
 
     const thresholdLine = svg.append("line")
       .attr("class", "thresholdLine")
@@ -147,12 +159,12 @@
         .data(words)
         .enter()
         .append("text")
-        .style("font-size", (d) => { return Math.floor(Math.sqrt(d.size)) * 2 + "px"; })
-        .style("fill", (_, i) => { return color(i); })
+        .style("font-size", (d) => fontScale(d.size) * 2 + "px")
+        .style("fill", (_, i) => color(i))
         .attr("transform", (d) => {
           return "translate(" + [d.x, d.y] + ") rotate(" + d.rotate + ")";
         })
-        .text((d) => { return d.word; });
+        .text((d) => d.word);
     };
   
     const layout = d3.layout.cloud()
