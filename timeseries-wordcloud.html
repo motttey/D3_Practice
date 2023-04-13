@@ -30,7 +30,7 @@
 
   const yScale = d3.scaleLinear()
     .domain([0, maxValue])
-    .range([margin.top, height - margin.bottom]);
+    .range([height - margin.bottom, margin.top]);
 
   // 30日間のデータを作成する
   const wordsList = [
@@ -91,12 +91,19 @@
     .y((d) => yScale(d.value));
 
   const path = lineChart.append("path")
-    // dataをセット
     .datum(data)
     .attr("class", "dataPath")
     .attr("fill", "none")
     .attr("stroke", "red")
     .attr("d", line);
+
+  const selectedPath = lineChart.append("path")
+    .datum(data)
+    .attr("class", "selectedDataPath")
+    .attr("fill", "none")
+    .attr("stroke", "blue")
+    .attr("d", line)
+    .style("opacity", 0);
 
   const color = d3.scaleLinear()
     .domain([0, 10])
@@ -153,6 +160,11 @@
       .attr("stroke-width", 1)
       .attr("stroke", "lightgray");
 
+    const findScore = (words, targetWord) => {
+      const target = words.find((w) => w.word === targetWord.word);
+      return (target) ? target.score : 0;
+    }
+
     const draw = (words) => {
       g.selectAll("text")
         .attr("class", "word")
@@ -164,9 +176,29 @@
         .attr("transform", (d) => {
           return "translate(" + [d.x, d.y] + ") rotate(" + d.rotate + ")";
         })
-        .text((d) => d.word);
+        .text((d) => d.word)
+        .on("mouseover", (e) => {
+					const targetKeywordData = e.target.__data__;
+          const selectedData = data.map((d) => {
+            return {
+              "day": d.day,
+              "month": d.month,
+              "year": d.year,
+              "word": targetKeywordData.word,
+              "value":  findScore(d.words, targetKeywordData)
+            }
+          });
+
+          d3.select(".selectedDataPath")
+            .datum(selectedData)
+            .attr("d", line)
+            .style("opacity", 1);
+				})
+        .on("mouseout", (_) => {
+          selectedPath.style("opacity", 0);
+				})
     };
-  
+
     const layout = d3.layout.cloud()
       .size([xEnd - xStart, height / 2 - margin.bottom])
       .words(groupedWordList)
