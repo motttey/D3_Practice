@@ -28,10 +28,6 @@
     .domain([new Date(2023, 0, 1), new Date(2023, 0, maxDate)])
     .range([margin.left, width - margin.right]);
 
-  const yScale = d3.scaleLinear()
-    .domain([0, maxValue])
-    .range([height - margin.bottom, margin.top]);
-
   // 30日間のデータを作成する
   const wordsList = [
     "リバティアイランド",
@@ -65,9 +61,13 @@
       const score = Math.floor(Math.random() * maxValue);
       words.push({ word: wordsList[wordIndex], score });
     }
-    const value = Math.floor(Math.random() * 10)
+    const value = d3.sum(words.map((w) => w.score))
     data.push({ year: 2023, month: 1, day, words, value });
   }
+
+  const yScale = d3.scaleLinear()
+    .domain([0, d3.max(data.map((d) => d.value))])
+    .range([height - margin.bottom, margin.top]);
 
   // SVG要素を追加
   const svg = d3
