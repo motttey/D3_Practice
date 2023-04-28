@@ -90,6 +90,11 @@
     .x((d) => xScale(new Date(d.year, d.month - 1, d.day - 1)))
     .y((d) => yScale(d.value));
 
+  const area = d3.area()
+    .x((d) => xScale(new Date(d.year, d.month - 1, d.day - 1)))
+    .y1((d) => yScale(d.value))
+    .y0(yScale(0));
+
   const path = lineChart.append("path")
     .datum(data)
     .attr("class", "dataPath")
@@ -100,13 +105,9 @@
   const selectedPath = lineChart.append("path")
     .datum(data)
     .attr("class", "selectedDataPath")
-    .attr("fill", "none")
+    .attr("fill", "dimgray")
     .attr("stroke", "dimgray")
-    .attr("d", d3.area()
-      .x(function(d) { return xScale(d[0]); })
-      .y1(function(d) { return yScale(d[1]); })
-      .y0(yScale(0))
-    )
+    .attr("d", area)
     .style("opacity", 0);
 
   const color = d3.scaleLinear()
@@ -195,7 +196,7 @@
 
           d3.select(".selectedDataPath")
             .datum(selectedData)
-            .attr("d", line)
+            .attr("d", area)
             .style("opacity", 1);
 				})
         .on("mouseout", (_) => {
