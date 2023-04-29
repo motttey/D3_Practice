@@ -87,11 +87,11 @@
     .attr("class", "lineChart");
 
   const line = d3.line()
-    .x((d) => xScale(new Date(d.year, d.month - 1, d.day - 1)))
+    .x((d) => xScale(new Date(d.year, d.month - 1, d.day)))
     .y((d) => yScale(d.value));
 
   const area = d3.area()
-    .x((d) => xScale(new Date(d.year, d.month - 1, d.day - 1)))
+    .x((d) => xScale(new Date(d.year, d.month - 1, d.day)))
     .y1((d) => yScale(d.value))
     .y0(yScale(0));
 
@@ -116,9 +116,10 @@
 
   const wordadding = 2;
   const maxDatePeriod = 7;
-  const fontMax = 16;
+  const fontMax = 12;
   const fontMin = 4;
-  for (let i = 1; i <= maxDate; i = i + maxDatePeriod) {
+
+  for (let i = 0; i <= maxDate; i = i + maxDatePeriod) {
     const endIndex = (i + maxDatePeriod < maxDate) ? i + maxDatePeriod : maxDate - 1; 
     const startDateData = data[i];
     const endDateData = data[endIndex];
@@ -131,7 +132,7 @@
       const wordList = data[j].words;
       wordList.forEach(w => {
         if (aggWords[w.word]) {
-        aggWords[w.word] = aggWords[w.word] + w.score;
+          aggWords[w.word] = aggWords[w.word] + w.score;
         } else {
           aggWords[w.word] = w.score;
         }
